@@ -1,0 +1,120 @@
+Project Requirement Document: AI & Logic Core (Final V2.1)
+
+Role: AI/ML Engineer (Vedant Korade) Data Ecosystem: Google Fit (via Health Connect API) + Manual User Input
+1. Master Data Schema (Pydantic)
+
+Instruction: Implement this schema first. It acts as the contract between Frontend and Backend.
+Python
+
+from pydantic import BaseModel
+from typing import List, Optional
+
+class SleepSegment(BaseModel):
+    start_time: str # ISO Format: "2025-12-06T23:30:00"
+    end_time: str   # ISO Format: "2025-12-07T07:30:00"
+    stage: str      # "deep", "light", "rem"
+    duration_minutes: int
+
+class HeartRateSample(BaseModel):
+    timestamp: str  # ISO Format (includes Date and Time)
+    bpm: int
+
+class ManualWorkout(BaseModel):
+    activity_type: str  # e.g., "Gym", "Yoga", "Running"
+    duration_minutes: int
+    intensity_rpe: int  # Rated Perceived Exertion (1-10 scale)
+    calories_burnt: int # NEW FIELD
+    notes: Optional[str]
+
+class DailyLog(BaseModel):
+    date: str       # "2025-12-06"
+    total_steps: int
+    total_calories_active: float
+    sleep_segments: List[SleepSegment]
+    heart_rate_samples: List[HeartRateSample]
+    manual_workouts: List[ManualWorkout]
+
+2. Module A: The "Bio-Recovery" Algorithm (Dynamic RHR)
+
+Objective: Calculate a "Readiness Score" using actual sleep windows. Input: DailyLog object.
+
+Logic Requirements: Create calculate_recovery_score(log: DailyLog) -> dict:
+
+    Dynamic Resting Heart Rate (RHR) Calculation:
+
+        Identify Sleep Window: Find the SleepSegment (or sequence of segments) representing the longest continuous sleep block (Main Sleep).
+
+        Filter HR: Extract heart_rate_samples where timestamp is strictly within the start_time and end_time of that Main Sleep.
+
+        Calculate: Average of these samples = True_RHR.
+
+        Fallback: If no sleep data exists, use 2 AM - 6 AM as default.
+
+    Deep Sleep Calculation:
+
+        Sum duration_minutes where stage == "deep".
+
+        Logic: If Deep Sleep < 45 mins, flag PHYSICAL_RECOVERY_LOW.
+
+    The Scoring Formula (0-100):
+
+        Base: 70
+
+        Sleep Quantity: +15 if total_sleep > 7 hrs.
+
+        Sleep Quality: -15 if deep_sleep < 45 mins.
+
+        Strain: -10 if yesterday's total workout intensity > 8.
+
+        Output: Score + Status ("REST_MODE", "READY_TO_TRAIN").
+
+3. Module B: The GenAI Coach (Context Aware)
+
+Objective: Negotiate goals based on recovery.
+
+Function: async def get_coach_feedback(context_type: str, data: DailyLog)
+Mode 1: Morning Plan (Context: "PLANNING")
+
+    System Prompt: "Analyze Deep Sleep and True_RHR. If recovery is <50, suggest a lighter version of their usual workout."
+
+Mode 2: Post-Workout Analysis (Context: "ANALYSIS")
+
+    Trigger: User logs a ManualWorkout.
+
+    System Prompt:
+
+        "User burnt {calories_burnt} kcal in {activity_type}. Compare this output against their Bio-Recovery score."
+
+        "If Recovery was LOW but they burnt >500 kcal: Warn them about potential immune system suppression."
+
+        "If Recovery was HIGH and they burnt >500 kcal: Praise them for utilizing their peak energy."
+
+4. Module D: The Battle Logic (Rebalanced)
+
+Objective: A fair scoring system where Walkers can compete with Gym-goers.
+
+Formula:
+BattleScore=(Steps×0.05)+(DeepSleepMins×5)+(WorkoutScore)
+
+Where WorkoutScore is:
+WorkoutScore=(Duration×Intensity)+(CaloriesBurnt×0.2)
+
+Logic Explanation:
+
+    Steps (0.05):
+
+        Old: 10,000 steps * 0.01 = 100 pts (Too low).
+
+        New: 10,000 steps * 0.05 = 500 pts. (Fair).
+
+    Deep Sleep (5.0):
+
+        60 mins Deep Sleep * 5 = 300 pts. (Encourages recovery).
+
+    Workout:
+
+        1 Hour Gym (Intensity 7, 300 cal):
+
+        (60 * 7) + (300 * 0.2) = 420 + 60 = 480 pts.
+
+Result: A walker (500 pts) is now competitive with a gym-goer (480 pts), making the battle fair and inclusive.

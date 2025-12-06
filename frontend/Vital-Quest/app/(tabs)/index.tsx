@@ -5,6 +5,7 @@ import { QuickLogModal } from '@/components/health/QuickLogModal';
 import { gameConfig } from '@/constants/gameConfig';
 import { theme } from '@/constants/theme';
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
+import AICoach from '@/services/aiCoach';
 import { checkAchievements, initializeGame, updateQuestProgress } from '@/services/gamificationEngine';
 import { initialAchievements, motivationalMessages } from '@/services/mockData';
 import { useGameStore } from '@/store/gameStore';
@@ -252,6 +253,31 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
               </View>
+            </View>
+          </View>
+
+          {/* AI Coach Recommendations */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🤖 AI Coach</Text>
+            <View style={styles.coachRecommendations}>
+              {AICoach.getRecommendations().slice(0, 3).map((rec) => (
+                <View key={rec.id} style={styles.recommendationCard}>
+                  <Text style={styles.recIcon}>{rec.icon}</Text>
+                  <View style={styles.recContent}>
+                    <Text style={styles.recTitle}>{rec.title}</Text>
+                    <Text style={styles.recMessage}>{rec.message}</Text>
+                  </View>
+                  <View style={[
+                    styles.priorityBadge,
+                    rec.priority === 'high' && styles.highPriority,
+                    rec.priority === 'medium' && styles.mediumPriority,
+                  ]}>
+                    <Text style={styles.priorityText}>
+                      {rec.priority === 'high' ? '!' : rec.priority === 'medium' ? '•' : '✓'}
+                    </Text>
+                  </View>
+                </View>
+              ))}
             </View>
           </View>
 
@@ -560,6 +586,55 @@ const styles = StyleSheet.create({
   insightHint: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.secondary,
+  },
+  coachRecommendations: {
+    gap: theme.spacing.md,
+  },
+  recommendationCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.background.card,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.primary.dark,
+    alignItems: 'center',
+  },
+  recIcon: {
+    fontSize: 28,
+    marginRight: theme.spacing.md,
+  },
+  recContent: {
+    flex: 1,
+  },
+  recTitle: {
+    fontSize: theme.typography.fontSize.base,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  recMessage: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.secondary,
+    lineHeight: 18,
+  },
+  priorityBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.text.disabled,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  highPriority: {
+    backgroundColor: theme.colors.stats.hp,
+  },
+  mediumPriority: {
+    backgroundColor: theme.colors.stats.stamina,
+  },
+  priorityText: {
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
   },
   actionIcon: {
     fontSize: 32,

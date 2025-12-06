@@ -28,7 +28,7 @@ export default function DashboardScreen() {
   const todayExerciseMinutes = useHealthStore((state) => state.todayExerciseMinutes);
   const todayWaterGlasses = useHealthStore((state) => state.todayWaterGlasses);
 
-  const { syncData, isSyncing } = useHealthConnectSync();
+  const { syncData, syncDataRange, isSyncing } = useHealthConnectSync();
 
   const handleSync = async () => {
     const success = await syncData();
@@ -36,6 +36,22 @@ export default function DashboardScreen() {
       Alert.alert('Sync Complete', 'Your health data has been synchronized.');
     } else {
       Alert.alert('Sync Failed', 'Failed to sync health data. Please check permissions.');
+    }
+  };
+
+  const handleSyncLastWeek = async () => {
+    // Sync last 7 days of data
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    
+    console.log('[Dashboard] Syncing last 7 days:', startDate, 'to', endDate);
+    const success = await syncDataRange(startDate, endDate);
+    
+    if (success) {
+      Alert.alert('Historical Sync Complete', 'Last 7 days of health data synchronized.');
+    } else {
+      Alert.alert('Sync Failed', 'Failed to sync historical data.');
     }
   };
 
@@ -141,17 +157,26 @@ export default function DashboardScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Today's Progress</Text>
-              <TouchableOpacity
-                style={styles.syncButton}
-                onPress={handleSync}
-                disabled={isSyncing}
-              >
-                {isSyncing ? (
-                  <ActivityIndicator size="small" color={theme.colors.primary.light} />
-                ) : (
-                  <Text style={styles.syncButtonText}>🔄 Sync</Text>
-                )}
-              </TouchableOpacity>
+              <View style={styles.syncButtons}>
+                <TouchableOpacity
+                  style={[styles.syncButton, styles.syncButtonSmall]}
+                  onPress={handleSyncLastWeek}
+                  disabled={isSyncing}
+                >
+                  <Text style={styles.syncButtonTextSmall}>📅 Week</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.syncButton}
+                  onPress={handleSync}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? (
+                    <ActivityIndicator size="small" color={theme.colors.primary.light} />
+                  ) : (
+                    <Text style={styles.syncButtonText}>🔄 Sync</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={styles.healthGrid}>
               <View style={styles.healthCard}>
@@ -168,6 +193,64 @@ export default function DashboardScreen() {
                 <Text style={styles.healthIcon}>💧</Text>
                 <Text style={styles.healthValue}>{todayWaterGlasses}/8</Text>
                 <Text style={styles.healthLabel}>Water</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Progress Insights */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>📊 Progress Insights</Text>
+            <View style={styles.insightsContainer}>
+              <View style={styles.insightCard}>
+                <Text style={styles.insightIcon}>🎯</Text>
+                <View style={styles.insightContent}>
+                  <Text style={styles.insightTitle}>Daily Goal Progress</Text>
+                  <Text style={styles.insightValue}>
+                    {Math.round((todaySteps / 10000) * 100)}% of step goal
+                  </Text>
+                  <Text style={styles.insightHint}>
+                    {todaySteps >= 10000 ? '🎉 Goal achieved!' : `${(10000 - todaySteps).toLocaleString()} steps to go`}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.insightCard}>
+                <Text style={styles.insightIcon}>⚡</Text>
+                <View style={styles.insightContent}>
+                  <Text style={styles.insightTitle}>Activity Level</Text>
+                  <Text style={styles.insightValue}>
+                    {todayExerciseMinutes >= 30 ? 'Excellent' : todayExerciseMinutes >= 15 ? 'Good' : 'Low'}
+                  </Text>
+                  <Text style={styles.insightHint}>
+                    {todayExerciseMinutes >= 30 ? 'Keep it up!' : `${30 - todayExerciseMinutes} min to reach 30 min goal`}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.insightCard}>
+                <Text style={styles.insightIcon}>💧</Text>
+                <View style={styles.insightContent}>
+                  <Text style={styles.insightTitle}>Hydration</Text>
+                  <Text style={styles.insightValue}>
+                    {Math.round((todayWaterGlasses / 8) * 100)}%
+                  </Text>
+                  <Text style={styles.insightHint}>
+                    {todayWaterGlasses >= 8 ? 'Well hydrated!' : `${8 - todayWaterGlasses} glasses remaining`}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.insightCard}>
+                <Text style={styles.insightIcon}>🔥</Text>
+                <View style={styles.insightContent}>
+                  <Text style={styles.insightTitle}>Current Streak</Text>
+                  <Text style={styles.insightValue}>
+                    {user.stats.currentStreak} {user.stats.currentStreak === 1 ? 'day' : 'days'}
+                  </Text>
+                  <Text style={styles.insightHint}>
+                    {user.stats.currentStreak >= 7 ? '🏆 Amazing streak!' : 'Keep going!'}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
@@ -418,17 +501,65 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary.dark,
     borderRadius: theme.borderRadius.lg,
   },
+  syncButtons: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
   syncButton: {
     padding: theme.spacing.sm,
     backgroundColor: theme.colors.background.card,
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.primary.dark,
+    minWidth: 70,
+    alignItems: 'center',
+  },
+  syncButtonSmall: {
+    minWidth: 60,
   },
   syncButtonText: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.primary.light,
+  },
+  syncButtonTextSmall: {
+    fontSize: theme.typography.fontSize.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.primary.light,
+  },
+  insightsContainer: {
+    gap: theme.spacing.md,
+  },
+  insightCard: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.background.card,
+    padding: theme.spacing.lg,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.primary.dark,
+    alignItems: 'center',
+  },
+  insightIcon: {
+    fontSize: 32,
+    marginRight: theme.spacing.md,
+  },
+  insightContent: {
+    flex: 1,
+  },
+  insightTitle: {
+    fontSize: theme.typography.fontSize.sm,
+    color: theme.colors.text.tertiary,
+    marginBottom: theme.spacing.xs,
+  },
+  insightValue: {
+    fontSize: theme.typography.fontSize.xl,
+    fontWeight: theme.typography.fontWeight.bold,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  insightHint: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.secondary,
   },
   actionIcon: {
     fontSize: 32,

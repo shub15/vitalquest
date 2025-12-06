@@ -26,6 +26,10 @@ interface GameState {
   // Streaks
   streaks: Streak[];
   
+  // Hydration state
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
+  
   // Actions
   initializeUser: (username: string) => void;
   updateCharacter: (updates: Partial<Character>) => void;
@@ -135,6 +139,11 @@ export const useGameStore = create<GameState>()(
       notifications: [],
       unreadCount: 0,
       streaks: [],
+      _hasHydrated: false,
+
+      setHasHydrated: (state: boolean) => {
+        set({ _hasHydrated: state });
+      },
 
       initializeUser: (username: string) => {
         const newUser = createDefaultUser(username);
@@ -570,6 +579,16 @@ export const useGameStore = create<GameState>()(
     {
       name: 'vital-quest-game-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('Failed to hydrate store:', error);
+        } else {
+          console.log('Store hydration complete');
+        }
+        if (state) {
+          state.setHasHydrated(true);
+        }
+      },
     }
   )
 );

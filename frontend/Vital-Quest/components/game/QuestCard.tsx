@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   gradient: {
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     borderRadius: theme.borderRadius.xl,
   },
   content: {
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: theme.spacing.sm,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   icon: {
     fontSize: 28,

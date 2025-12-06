@@ -44,7 +44,7 @@ export default function SocialScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
-        colors={[theme.colors.background.primary, theme.colors.background.secondary]}
+        colors={[theme.colors.background.primary, theme.colors.background.primary]}
         style={styles.container}
       >
         {/* Header */}
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: theme.spacing.sm,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: theme.borderRadius.md,
   },
   activeTab: {
@@ -229,6 +230,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.tertiary,
+    textAlign: 'center',
   },
   activeTabText: {
     color: theme.colors.text.primary,

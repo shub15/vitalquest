@@ -7,7 +7,7 @@ import { theme } from '@/constants/theme';
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
 import AICoach from '@/services/aiCoach';
 import { checkAchievements, initializeGame, updateQuestProgress } from '@/services/gamificationEngine';
-import { initialAchievements, motivationalMessages } from '@/services/mockData';
+import { initialAchievements } from '@/services/mockData';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -98,7 +98,7 @@ export default function DashboardScreen() {
   const xpNeeded = xpForNextLevel - gameConfig.levels.xpThresholds[user.character.level - 1];
 
   const dailyQuests = activeQuests.filter((q) => q.type === 'daily').slice(0, 3);
-  const randomMotivation = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+
 
   const handleQuestComplete = (questId: string) => {
     completeQuest(questId);
@@ -112,7 +112,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
-        colors={[theme.colors.background.primary, theme.colors.background.secondary]}
+        colors={[theme.colors.background.primary, theme.colors.background.primary]}
         style={styles.container}
       >
         <ScrollView
@@ -141,19 +141,7 @@ export default function DashboardScreen() {
             streak={user.stats.currentStreak}
           />
 
-          {/* AI Coach Tip */}
-          <View style={styles.coachCard}>
-            <LinearGradient
-              colors={[theme.colors.primary.dark, theme.colors.primary.main]}
-              style={styles.coachGradient}
-            >
-              <MaterialCommunityIcons name="robot" size={40} color={theme.colors.text.primary} style={styles.coachIcon} />
-              <View style={styles.coachContent}>
-                <Text style={styles.coachTitle}>Coach's Tip</Text>
-                <Text style={styles.coachMessage}>{randomMotivation}</Text>
-              </View>
-            </LinearGradient>
-          </View>
+
 
           {/* Today's Health Summary */}
           <View style={styles.section}>
@@ -205,66 +193,7 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          {/* Progress Insights */}
-          <View style={styles.section}>
-            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md}}>
-              <MaterialCommunityIcons name="chart-bar" size={24} color={theme.colors.text.primary} style={{marginRight: 8}} />
-              <Text style={styles.sectionTitle}>Progress Insights</Text>
-            </View>
-            <View style={styles.insightsContainer}>
-              <View style={styles.insightCard}>
-                <MaterialCommunityIcons name="target" size={32} color={theme.colors.accent.gold} style={styles.insightIcon} />
-                <View style={styles.insightContent}>
-                  <Text style={styles.insightTitle}>Daily Goal Progress</Text>
-                  <Text style={styles.insightValue}>
-                    {Math.round((todaySteps / 10000) * 100)}% of step goal
-                  </Text>
-                  <Text style={styles.insightHint}>
-                    {todaySteps >= 10000 ? <><MaterialCommunityIcons name="party-popper" size={12} color={theme.colors.text.secondary} /> Goal achieved!</> : `${(10000 - todaySteps).toLocaleString()} steps to go`}
-                  </Text>
-                </View>
-              </View>
 
-              <View style={styles.insightCard}>
-                <MaterialCommunityIcons name="flash" size={32} color={theme.colors.accent.legendary} style={styles.insightIcon} />
-                <View style={styles.insightContent}>
-                  <Text style={styles.insightTitle}>Activity Level</Text>
-                  <Text style={styles.insightValue}>
-                    {todayExerciseMinutes >= 30 ? 'Excellent' : todayExerciseMinutes >= 15 ? 'Good' : 'Low'}
-                  </Text>
-                  <Text style={styles.insightHint}>
-                    {todayExerciseMinutes >= 30 ? 'Keep it up!' : `${30 - todayExerciseMinutes} min to reach 30 min goal`}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.insightCard}>
-                <MaterialCommunityIcons name="water" size={32} color={theme.colors.stats.mana} style={styles.insightIcon} />
-                <View style={styles.insightContent}>
-                  <Text style={styles.insightTitle}>Hydration</Text>
-                  <Text style={styles.insightValue}>
-                    {Math.round((todayWaterGlasses / 8) * 100)}%
-                  </Text>
-                  <Text style={styles.insightHint}>
-                    {todayWaterGlasses >= 8 ? 'Well hydrated!' : `${8 - todayWaterGlasses} glasses remaining`}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.insightCard}>
-                <MaterialCommunityIcons name="fire" size={32} color={theme.colors.stats.hp} style={styles.insightIcon} />
-                <View style={styles.insightContent}>
-                  <Text style={styles.insightTitle}>Current Streak</Text>
-                  <Text style={styles.insightValue}>
-                    {user.stats.currentStreak} {user.stats.currentStreak === 1 ? 'day' : 'days'}
-                  </Text>
-                  <Text style={styles.insightHint}>
-                    {user.stats.currentStreak >= 7 ? <><MaterialCommunityIcons name="trophy" size={12} color={theme.colors.text.secondary} /> Amazing streak!</> : 'Keep going!'}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
 
           {/* AI Coach Recommendations */}
           <View style={styles.section}>
@@ -339,7 +268,7 @@ export default function DashboardScreen() {
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('water')}>
                 <LinearGradient
-                  colors={[theme.colors.stats.mana, theme.colors.primary.light]}
+                  colors={[theme.colors.stats.mana, theme.colors.primary.main]}
                   style={styles.actionGradient}
                 >
                   <MaterialCommunityIcons name="water" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
@@ -349,7 +278,7 @@ export default function DashboardScreen() {
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meal')}>
                 <LinearGradient
-                  colors={[theme.colors.stats.stamina, theme.colors.accent.gold]}
+                  colors={theme.colors.gradients.gold}
                   style={styles.actionGradient}
                 >
                   <MaterialCommunityIcons name="food-apple" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
@@ -359,7 +288,7 @@ export default function DashboardScreen() {
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('exercise')}>
                 <LinearGradient
-                  colors={[theme.colors.stats.hp, theme.colors.accent.legendary]}
+                  colors={theme.colors.gradients.health}
                   style={styles.actionGradient}
                 >
                   <MaterialCommunityIcons name="dumbbell" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
@@ -369,7 +298,7 @@ export default function DashboardScreen() {
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meditation')}>
                 <LinearGradient
-                  colors={[theme.colors.quest.custom, theme.colors.primary.lighter]}
+                  colors={[theme.colors.quest.weekly, theme.colors.primary.main]}
                   style={styles.actionGradient}
                 >
                   <MaterialCommunityIcons name="meditation" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
@@ -379,7 +308,7 @@ export default function DashboardScreen() {
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('sleep')}>
                 <LinearGradient
-                  colors={[theme.colors.background.tertiary, theme.colors.primary.dark]}
+                  colors={theme.colors.gradients.card}
                   style={styles.actionGradient}
                 >
                   <MaterialCommunityIcons name="bed" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
@@ -446,37 +375,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.fontWeight.extrabold,
     color: theme.colors.text.primary,
   },
-  coachCard: {
-    marginVertical: theme.spacing.lg,
-    borderRadius: theme.borderRadius.xl,
-    overflow: 'hidden',
-    ...theme.shadows.md,
-  },
-  coachGradient: {
-    flexDirection: 'row',
-    padding: theme.spacing.md,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.light,
-    borderRadius: theme.borderRadius.xl,
-  },
-  coachIcon: {
-    fontSize: 40,
-    marginRight: theme.spacing.md,
-  },
-  coachContent: {
-    flex: 1,
-  },
-  coachTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-  },
-  coachMessage: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    lineHeight: 18,
-  },
+
   section: {
     marginBottom: theme.spacing.xl,
   },
@@ -508,7 +407,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: theme.spacing.xs,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   healthIcon: {
     fontSize: 32,
@@ -541,13 +440,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     ...theme.shadows.md,
   },
   actionGradient: {
     padding: theme.spacing.lg,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
     borderRadius: theme.borderRadius.lg,
   },
   syncButtons: {
@@ -559,7 +458,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.card,
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
     minWidth: 70,
     alignItems: 'center',
   },
@@ -569,45 +468,11 @@ const styles = StyleSheet.create({
   syncButtonText: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary.light,
+    color: theme.colors.text.secondary,
   },
   syncButtonTextSmall: {
     fontSize: theme.typography.fontSize.xs,
     fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary.light,
-  },
-  insightsContainer: {
-    gap: theme.spacing.md,
-  },
-  insightCard: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
-    alignItems: 'center',
-  },
-  insightIcon: {
-    fontSize: 32,
-    marginRight: theme.spacing.md,
-  },
-  insightContent: {
-    flex: 1,
-  },
-  insightTitle: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
-    marginBottom: theme.spacing.xs,
-  },
-  insightValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-  },
-  insightHint: {
-    fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.secondary,
   },
   coachRecommendations: {
@@ -619,7 +484,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
     alignItems: 'center',
   },
   recIcon: {

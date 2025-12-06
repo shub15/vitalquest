@@ -40,7 +40,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <LinearGradient
-        colors={[theme.colors.background.primary, theme.colors.background.secondary]}
+        colors={[theme.colors.background.primary, theme.colors.background.primary]}
         style={styles.container}
       >
       <ScrollView
@@ -258,8 +258,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.card,
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.xl,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     ...theme.shadows.md,
   },
   profileInfo: {
@@ -310,21 +310,23 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xs,
     marginBottom: theme.spacing.xl,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   tab: {
     flex: 1,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   tabActive: {
-    backgroundColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.background.tertiary,
   },
   tabText: {
     fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.tertiary,
+    textAlign: 'center',
   },
   tabTextActive: {
     color: theme.colors.text.primary,
@@ -352,7 +354,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.sm,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   statIcon: {
     marginBottom: theme.spacing.sm,
@@ -372,7 +374,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   progressRow: {
     flexDirection: 'row',
@@ -397,7 +399,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     marginBottom: theme.spacing.xl,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   achievementProgressText: {
     fontSize: theme.typography.fontSize.base,

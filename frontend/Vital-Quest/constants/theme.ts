@@ -1,104 +1,112 @@
-// Fantasy RPG Theme for Vital Quest
+// Modern Dark RPG Theme for Vital Quest
+// Minimal, Material-inspired, High Contrast
+
 export const theme = {
   colors: {
-    // Primary Fantasy Colors
+    // Primary Brand Colors - Heroic Steel/Mystic
     primary: {
-      dark: '#4A1D96',      // Deep purple
-      main: '#6B2FBF',      // Royal purple
-      light: '#8B5CF6',     // Bright purple
-      lighter: '#A78BFA',   // Light purple
+      dark: '#0F172A',      // Slate 900 (Deepest)
+      main: '#334155',      // Slate 700 (Main UI)
+      light: '#475569',     // Slate 600 (Highlight)
+      lighter: '#94A3B8',   // Slate 400 (Text/Icon)
     },
     
-    // Mystical Accents
-    accent: {
-      gold: '#FFD700',      // Gold
-      silver: '#C0C0C0',    // Silver
-      bronze: '#CD7F32',    // Bronze
-      legendary: '#FF6B35', // Legendary orange
-    },
-    
-    // RPG Stats Colors
+    // RPG Class/Stat Accents (Slightly desaturated for premium feel)
     stats: {
-      hp: '#EF4444',        // Health red
-      xp: '#10B981',        // Experience green
-      mana: '#3B82F6',      // Mana blue
-      stamina: '#F59E0B',   // Stamina orange
+      hp: '#DC2626',        // Red 600
+      xp: '#CA8A04',        // Yellow 600
+      mana: '#0891B2',      // Cyan 600
+      stamina: '#059669',   // Emerald 600
     },
     
-    // Background & Surfaces
+    // Backgrounds - Deep Obsidian
     background: {
-      primary: '#0F0A1E',   // Deep dark purple
-      secondary: '#1A1333', // Dark purple
-      tertiary: '#2D1B4E',  // Medium purple
-      card: '#1E1538',      // Card background
+      primary: '#020617',   // Slate 950 (Main BG - Darker)
+      secondary: '#0F172A', // Slate 900 (Secondary BG)
+      tertiary: '#1E293B',  // Slate 800
+      card: '#0F172A',      // Slate 900 (Card Surface)
+      overlay: 'rgba(2, 6, 23, 0.9)', // Modal overlay
     },
     
-    // Text Colors
+    // Text - High Contrast & Clean
     text: {
-      primary: '#F9FAFB',   // Almost white
-      secondary: '#D1D5DB', // Light gray
-      tertiary: '#9CA3AF',  // Medium gray
-      disabled: '#6B7280',  // Dark gray
+      primary: '#F1F5F9',   // Slate 100
+      secondary: '#94A3B8', // Slate 400
+      tertiary: '#64748B',  // Slate 500
+      disabled: '#334155',  // Slate 700
+      inverse: '#020617',   // Slate 950
     },
     
-    // Quest & Challenge Colors
-    quest: {
-      daily: '#8B5CF6',     // Purple
-      weekly: '#EC4899',    // Pink
-      custom: '#06B6D4',    // Cyan
-      completed: '#10B981', // Green
+    // Interactive Elements (Subtle Borders)
+    border: {
+      subtle: 'rgba(255, 255, 255, 0.05)',    // Very subtle glass border
+      default: 'rgba(255, 255, 255, 0.1)',    // Default component border
+      highlight: 'rgba(148, 163, 184, 0.2)',  // Active state border
     },
-    
+
+    // Accents & Rarity
+    accent: {
+      gold: '#EAB308',      // Yellow 500
+      silver: '#94A3B8',    // Slate 400
+      bronze: '#B45309',    // Amber 700
+      legendary: '#F59E0B', // Amber 500
+      mythic: '#A855F7',    // Purple 500
+    },
+
     // Rarity Colors
     rarity: {
-      common: '#9CA3AF',    // Gray
-      uncommon: '#10B981',  // Green
-      rare: '#3B82F6',      // Blue
-      epic: '#A855F7',      // Purple
-      legendary: '#F59E0B', // Gold
+      common: '#64748B',    // Slate 500
+      uncommon: '#10B981',  // Emerald 500
+      rare: '#3B82F6',      // Blue 500
+      epic: '#8B5CF6',      // Violet 500
+      legendary: '#F59E0B', // Amber 500
     },
     
-    // Status Colors
+    // Quest Types
+    quest: {
+      daily: '#3B82F6',     // Blue 500
+      weekly: '#8B5CF6',    // Violet 500
+      custom: '#10B981',    // Emerald 500
+      completed: '#059669', // Emerald 600
+    },
+    
+    // Status
     status: {
-      success: '#10B981',   // Green
-      warning: '#F59E0B',   // Orange
-      error: '#EF4444',     // Red
-      info: '#3B82F6',      // Blue
+      success: '#10B981',   // Emerald 500
+      warning: '#F59E0B',   // Amber 500
+      error: '#EF4444',     // Red 500
+      info: '#3B82F6',      // Blue 500
     },
     
-    // Gradients (for LinearGradient)
+    // Gradients - Subtle Lighting Effects
     gradients: {
-      primary: ['#6B2FBF', '#8B5CF6'] as const,
-      gold: ['#FFD700', '#FFA500'] as const,
-      health: ['#EF4444', '#DC2626'] as const,
-      xp: ['#10B981', '#059669'] as const,
-      card: ['#1E1538', '#2D1B4E'] as const,
-      legendary: ['#FF6B35', '#F59E0B'] as const,
+      primary: ['#1E293B', '#334155'] as const,   // Slate 800 -> Slate 700 (Subtle Lift)
+      card: ['#0F172A', '#0F172A'] as const,      // Flat/Matte
+      gold: ['#713F12', '#CA8A04'] as const,      // Deep Bronze -> Gold
+      health: ['#7F1D1D', '#991B1B'] as const,    // Deep Red -> Red
+      xp: ['#064E3B', '#065F46'] as const,        // Deep Emerald -> Emerald
+      legendary: ['#78350F', '#B45309'] as const, // Deep Amber -> Amber
+      darkOffset: ['#020617', '#0F172A'] as const,
     },
   },
   
-  // Typography
+  // Typography - Clean Sans-Serif
   typography: {
     fontFamily: {
       regular: 'System',
       mono: 'SpaceMono',
-      // Add custom fantasy fonts here when loaded
-      fantasy: 'System', // Placeholder for custom font
     },
-    
     fontSize: {
-      xs: 10,
-      sm: 12,
-      base: 14,
-      lg: 16,
-      xl: 18,
-      '2xl': 20,
-      '3xl': 24,
-      '4xl': 28,
-      '5xl': 32,
-      '6xl': 40,
+      xs: 12,
+      sm: 14,
+      base: 16,
+      lg: 18,
+      xl: 20,
+      '2xl': 24,
+      '3xl': 30,
+      '4xl': 36,
+      '5xl': 48,
     },
-    
     fontWeight: {
       light: '300' as const,
       regular: '400' as const,
@@ -109,62 +117,60 @@ export const theme = {
     },
   },
   
-  // Spacing
+  // Spacing - Standard 4px grid
   spacing: {
     xs: 4,
     sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 20,
-    '2xl': 24,
-    '3xl': 32,
-    '4xl': 40,
-    '5xl': 48,
+    md: 16,
+    lg: 24,
+    xl: 32,
+    '2xl': 40,
+    '3xl': 48,
   },
   
   // Border Radius
   borderRadius: {
-    sm: 4,
-    md: 8,
-    lg: 12,
-    xl: 16,
-    '2xl': 20,
+    sm: 6,
+    md: 12,
+    lg: 16,
+    xl: 24,
+    '2xl': 32,
     full: 9999,
   },
   
-  // Shadows (for elevation)
+  // Modern Shadows (Subtle Glows)
   shadows: {
     sm: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
+      shadowOpacity: 0.3,
       shadowRadius: 2,
       elevation: 2,
     },
     md: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
       elevation: 4,
     },
     lg: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
       elevation: 8,
     },
+    // Glow effects
     glow: {
-      shadowColor: '#8B5CF6',
+      shadowColor: '#38BDF8',
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.5,
-      shadowRadius: 10,
-      elevation: 5,
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 4,
     },
   },
   
-  // Animation Durations
   animation: {
     fast: 150,
     normal: 300,

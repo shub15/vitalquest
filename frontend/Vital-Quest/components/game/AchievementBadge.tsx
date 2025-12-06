@@ -4,11 +4,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSequence,
-    withSpring,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 
 interface AchievementBadgeProps {
@@ -154,8 +154,8 @@ const styles = StyleSheet.create({
   gradient: {
     flex: 1,
     padding: theme.spacing.md,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     borderRadius: theme.borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background.tertiary,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 2,
     marginBottom: theme.spacing.sm,
   },
   icon: {

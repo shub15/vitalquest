@@ -27,7 +27,7 @@ export default function QuestsScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
     <LinearGradient
-      colors={[theme.colors.background.primary, theme.colors.background.secondary]}
+      colors={[theme.colors.background.primary, theme.colors.background.primary]}
       style={styles.container}
     >
       <ScrollView
@@ -211,13 +211,14 @@ const styles = StyleSheet.create({
     padding: theme.spacing.xs,
     marginBottom: theme.spacing.xl,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: theme.colors.border.subtle,
   },
   tab: {
     flex: 1,
     paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   tabActive: {
     backgroundColor: theme.colors.primary.main,
@@ -226,6 +227,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.tertiary,
+    textAlign: 'center',
   },
   tabTextActive: {
     color: theme.colors.text.primary,

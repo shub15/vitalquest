@@ -5,12 +5,12 @@ import { useHealthStore } from '@/store/healthStore';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
-    Modal,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface QuickLogModalProps {
@@ -234,10 +234,10 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.card,
+    backgroundColor: theme.colors.background.tertiary,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.md,
   },
@@ -253,10 +253,10 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.sm,
   },
   notesInput: {
-    backgroundColor: theme.colors.background.card,
+    backgroundColor: theme.colors.background.tertiary,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     textAlignVertical: 'top',
     minHeight: 80,
     marginBottom: theme.spacing.xl,
@@ -264,17 +264,20 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: theme.spacing.md,
+    marginBottom: theme.spacing.xl,
   },
   cancelButton: {
     flex: 1,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    borderWidth: 1,
+    borderColor: theme.colors.border.subtle,
     alignItems: 'center',
+    backgroundColor: theme.colors.background.tertiary,
+    justifyContent: 'center'
   },
   cancelText: {
-    fontSize: theme.typography.fontSize.base,
+    fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.secondary,
   },
@@ -282,13 +285,14 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
+    ...theme.shadows.glow,
   },
   submitGradient: {
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     alignItems: 'center',
   },
   submitText: {
-    fontSize: theme.typography.fontSize.base,
+    fontSize: theme.typography.fontSize.sm,
     fontWeight: theme.typography.fontWeight.bold,
     color: theme.colors.text.primary,
   },

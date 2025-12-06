@@ -219,9 +219,6 @@ export default function ProfileScreen() {
             )}
           </>
         )}
-        
-        {/* Bottom Padding */}
-        <View style={{ height: 40 }} />
       </ScrollView>
     </LinearGradient>
     </SafeAreaView>

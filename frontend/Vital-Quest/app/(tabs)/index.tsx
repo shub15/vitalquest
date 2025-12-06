@@ -140,7 +140,7 @@ export default function DashboardScreen() {
 
 
           {/* Today's Health Summary */}
-          <View style={styles.section}>
+          <View style={[styles.section,{paddingTop: theme.spacing.md}]}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Today's Progress</Text>
               <View style={styles.syncButtons}>
@@ -192,7 +192,7 @@ export default function DashboardScreen() {
 
 
           {/* AI Coach Recommendations */}
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md}}>
               <MaterialCommunityIcons name="robot" size={24} color={theme.colors.text.primary} style={{marginRight: 8}} />
               <Text style={styles.sectionTitle}>AI Coach</Text>
@@ -219,7 +219,7 @@ export default function DashboardScreen() {
                 </View>
               ))}
             </View>
-          </View>
+          </View> */}
 
           {/* Daily Quests */}
           <View style={styles.section}>
@@ -250,7 +250,7 @@ export default function DashboardScreen() {
 
           {/* Quick Actions */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            <Text style={[styles.sectionTitle, {paddingBottom: theme.spacing.md}]}>Quick Actions</Text>
             <View style={styles.actionGrid}>
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('steps')}>
                 <View style={styles.actionContent}>
@@ -296,8 +296,6 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          {/* Bottom Padding */}
-          <View style={{ height: 40 }} />
         </ScrollView>
 
         {/* Quick Log Modal */}
@@ -333,7 +331,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
   },
   header: {
     flexDirection: 'row',
@@ -355,7 +353,7 @@ const styles = StyleSheet.create({
   },
 
   section: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
   },
   sectionHeader: {
     flexDirection: 'row',

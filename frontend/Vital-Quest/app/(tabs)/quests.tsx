@@ -168,9 +168,6 @@ export default function QuestsScreen() {
             <Text style={styles.createText}>Create Custom Quest</Text>
           </LinearGradient>
         </TouchableOpacity>
-        
-        {/* Bottom Padding */}
-        <View style={{ height: 40 }} />
       </ScrollView>
     </LinearGradient>
     </SafeAreaView>
@@ -284,7 +281,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   createButton: {
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.md,
     borderRadius: theme.borderRadius.xl,
     overflow: 'hidden',
     ...theme.shadows.md,

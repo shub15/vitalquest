@@ -58,6 +58,30 @@ export const calculateMealXp = (isHealthy: boolean = false): number => {
   return isHealthy ? gameConfig.xpRewards.healthyMeal : gameConfig.xpRewards.logMeal;
 };
 
+/**
+ * Unified XP calculation for any activity type
+ * Used by Health Connect sync and manual logging
+ */
+export const calculateXpForActivity = (activityType: string, value: number): number => {
+  switch (activityType) {
+    case 'steps':
+      return calculateStepsXp(value);
+    case 'exercise':
+      return calculateExerciseXp(value);
+    case 'meditation':
+      return calculateMeditationXp(value);
+    case 'sleep':
+      return calculateSleepXp(value);
+    case 'water':
+      return calculateWaterXp(value);
+    case 'meal':
+      return gameConfig.xpRewards.logMeal;
+    default:
+      return 0;
+  }
+};
+
+
 // Process daily activities and award XP
 export const processDailyActivities = () => {
   const healthStore = useHealthStore.getState();

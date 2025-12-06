@@ -10,6 +10,7 @@ import { checkAchievements, initializeGame, updateQuestProgress } from '@/servic
 import { initialAchievements, motivationalMessages } from '@/services/mockData';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -146,7 +147,7 @@ export default function DashboardScreen() {
               colors={[theme.colors.primary.dark, theme.colors.primary.main]}
               style={styles.coachGradient}
             >
-              <Text style={styles.coachIcon}>🤖</Text>
+              <MaterialCommunityIcons name="robot" size={40} color={theme.colors.text.primary} style={styles.coachIcon} />
               <View style={styles.coachContent}>
                 <Text style={styles.coachTitle}>Coach's Tip</Text>
                 <Text style={styles.coachMessage}>{randomMotivation}</Text>
@@ -164,7 +165,10 @@ export default function DashboardScreen() {
                   onPress={handleSyncLastWeek}
                   disabled={isSyncing}
                 >
-                  <Text style={styles.syncButtonTextSmall}>📅 Week</Text>
+                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                    <MaterialCommunityIcons name="calendar-week" size={14} color={theme.colors.primary.light} />
+                    <Text style={styles.syncButtonTextSmall}>Week</Text>
+                  </View>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.syncButton}
@@ -174,24 +178,27 @@ export default function DashboardScreen() {
                   {isSyncing ? (
                     <ActivityIndicator size="small" color={theme.colors.primary.light} />
                   ) : (
-                    <Text style={styles.syncButtonText}>🔄 Sync</Text>
+                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                      <MaterialCommunityIcons name="sync" size={14} color={theme.colors.primary.light} />
+                      <Text style={styles.syncButtonText}>Sync</Text>
+                    </View>
                   )}
                 </TouchableOpacity>
               </View>
             </View>
             <View style={styles.healthGrid}>
               <View style={styles.healthCard}>
-                <Text style={styles.healthIcon}>👣</Text>
+                <MaterialCommunityIcons name="shoe-print" size={32} color={theme.colors.stats.xp} style={styles.healthIcon} />
                 <Text style={styles.healthValue}>{todaySteps.toLocaleString()}</Text>
                 <Text style={styles.healthLabel}>Steps</Text>
               </View>
               <View style={styles.healthCard}>
-                <Text style={styles.healthIcon}>💪</Text>
+                <MaterialCommunityIcons name="dumbbell" size={32} color={theme.colors.stats.hp} style={styles.healthIcon} />
                 <Text style={styles.healthValue}>{todayExerciseMinutes}</Text>
                 <Text style={styles.healthLabel}>Exercise (min)</Text>
               </View>
               <View style={styles.healthCard}>
-                <Text style={styles.healthIcon}>💧</Text>
+                <MaterialCommunityIcons name="water" size={32} color={theme.colors.stats.mana} style={styles.healthIcon} />
                 <Text style={styles.healthValue}>{todayWaterGlasses}/8</Text>
                 <Text style={styles.healthLabel}>Water</Text>
               </View>
@@ -200,23 +207,26 @@ export default function DashboardScreen() {
 
           {/* Progress Insights */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📊 Progress Insights</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md}}>
+              <MaterialCommunityIcons name="chart-bar" size={24} color={theme.colors.text.primary} style={{marginRight: 8}} />
+              <Text style={styles.sectionTitle}>Progress Insights</Text>
+            </View>
             <View style={styles.insightsContainer}>
               <View style={styles.insightCard}>
-                <Text style={styles.insightIcon}>🎯</Text>
+                <MaterialCommunityIcons name="target" size={32} color={theme.colors.accent.gold} style={styles.insightIcon} />
                 <View style={styles.insightContent}>
                   <Text style={styles.insightTitle}>Daily Goal Progress</Text>
                   <Text style={styles.insightValue}>
                     {Math.round((todaySteps / 10000) * 100)}% of step goal
                   </Text>
                   <Text style={styles.insightHint}>
-                    {todaySteps >= 10000 ? '🎉 Goal achieved!' : `${(10000 - todaySteps).toLocaleString()} steps to go`}
+                    {todaySteps >= 10000 ? <><MaterialCommunityIcons name="party-popper" size={12} color={theme.colors.text.secondary} /> Goal achieved!</> : `${(10000 - todaySteps).toLocaleString()} steps to go`}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.insightCard}>
-                <Text style={styles.insightIcon}>⚡</Text>
+                <MaterialCommunityIcons name="flash" size={32} color={theme.colors.accent.legendary} style={styles.insightIcon} />
                 <View style={styles.insightContent}>
                   <Text style={styles.insightTitle}>Activity Level</Text>
                   <Text style={styles.insightValue}>
@@ -229,7 +239,7 @@ export default function DashboardScreen() {
               </View>
 
               <View style={styles.insightCard}>
-                <Text style={styles.insightIcon}>💧</Text>
+                <MaterialCommunityIcons name="water" size={32} color={theme.colors.stats.mana} style={styles.insightIcon} />
                 <View style={styles.insightContent}>
                   <Text style={styles.insightTitle}>Hydration</Text>
                   <Text style={styles.insightValue}>
@@ -242,14 +252,14 @@ export default function DashboardScreen() {
               </View>
 
               <View style={styles.insightCard}>
-                <Text style={styles.insightIcon}>🔥</Text>
+                <MaterialCommunityIcons name="fire" size={32} color={theme.colors.stats.hp} style={styles.insightIcon} />
                 <View style={styles.insightContent}>
                   <Text style={styles.insightTitle}>Current Streak</Text>
                   <Text style={styles.insightValue}>
                     {user.stats.currentStreak} {user.stats.currentStreak === 1 ? 'day' : 'days'}
                   </Text>
                   <Text style={styles.insightHint}>
-                    {user.stats.currentStreak >= 7 ? '🏆 Amazing streak!' : 'Keep going!'}
+                    {user.stats.currentStreak >= 7 ? <><MaterialCommunityIcons name="trophy" size={12} color={theme.colors.text.secondary} /> Amazing streak!</> : 'Keep going!'}
                   </Text>
                 </View>
               </View>
@@ -258,11 +268,14 @@ export default function DashboardScreen() {
 
           {/* AI Coach Recommendations */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>🤖 AI Coach</Text>
+            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md}}>
+              <MaterialCommunityIcons name="robot" size={24} color={theme.colors.text.primary} style={{marginRight: 8}} />
+              <Text style={styles.sectionTitle}>AI Coach</Text>
+            </View>
             <View style={styles.coachRecommendations}>
               {AICoach.getRecommendations().slice(0, 3).map((rec) => (
                 <View key={rec.id} style={styles.recommendationCard}>
-                  <Text style={styles.recIcon}>{rec.icon}</Text>
+                  <MaterialCommunityIcons name={rec.icon as any} size={28} color={theme.colors.primary.light} style={styles.recIcon} />
                   <View style={styles.recContent}>
                     <Text style={styles.recTitle}>{rec.title}</Text>
                     <Text style={styles.recMessage}>{rec.message}</Text>
@@ -272,9 +285,11 @@ export default function DashboardScreen() {
                     rec.priority === 'high' && styles.highPriority,
                     rec.priority === 'medium' && styles.mediumPriority,
                   ]}>
-                    <Text style={styles.priorityText}>
-                      {rec.priority === 'high' ? '!' : rec.priority === 'medium' ? '•' : '✓'}
-                    </Text>
+                    <MaterialCommunityIcons 
+                      name={rec.priority === 'high' ? 'alert' : rec.priority === 'medium' ? 'circle-small' : 'check'} 
+                      size={16} 
+                      color={theme.colors.text.primary} 
+                    />
                   </View>
                 </View>
               ))}
@@ -286,7 +301,10 @@ export default function DashboardScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Daily Quests</Text>
               <TouchableOpacity>
-                <Text style={styles.seeAll}>See All →</Text>
+                <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
+                  <Text style={styles.seeAll}>See All</Text>
+                  <MaterialCommunityIcons name="chevron-right" size={16} color={theme.colors.primary.light} />
+                </View>
               </TouchableOpacity>
             </View>
             {dailyQuests.length > 0 ? (
@@ -298,7 +316,10 @@ export default function DashboardScreen() {
                 />
               ))
             ) : (
-              <Text style={styles.emptyText}>No active quests. Great job! 🎉</Text>
+              <View style={{alignItems: 'center', padding: theme.spacing.xl}}>
+                <Text style={styles.emptyText}>No active quests. Great job!</Text>
+                <MaterialCommunityIcons name="party-popper" size={24} color={theme.colors.text.tertiary} />
+              </View>
             )}
           </View>
 
@@ -311,7 +332,7 @@ export default function DashboardScreen() {
                   colors={theme.colors.gradients.primary}
                   style={styles.actionGradient}
                 >
-                  <Text style={styles.actionIcon}>👣</Text>
+                  <MaterialCommunityIcons name="shoe-print" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Steps</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -321,7 +342,7 @@ export default function DashboardScreen() {
                   colors={[theme.colors.stats.mana, theme.colors.primary.light]}
                   style={styles.actionGradient}
                 >
-                  <Text style={styles.actionIcon}>💧</Text>
+                  <MaterialCommunityIcons name="water" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Water</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -331,7 +352,7 @@ export default function DashboardScreen() {
                   colors={[theme.colors.stats.stamina, theme.colors.accent.gold]}
                   style={styles.actionGradient}
                 >
-                  <Text style={styles.actionIcon}>🍽️</Text>
+                  <MaterialCommunityIcons name="food-apple" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Meal</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -341,7 +362,7 @@ export default function DashboardScreen() {
                   colors={[theme.colors.stats.hp, theme.colors.accent.legendary]}
                   style={styles.actionGradient}
                 >
-                  <Text style={styles.actionIcon}>💪</Text>
+                  <MaterialCommunityIcons name="dumbbell" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Exercise</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -351,7 +372,7 @@ export default function DashboardScreen() {
                   colors={[theme.colors.quest.custom, theme.colors.primary.lighter]}
                   style={styles.actionGradient}
                 >
-                  <Text style={styles.actionIcon}>🧘</Text>
+                  <MaterialCommunityIcons name="meditation" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Meditate</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -361,7 +382,7 @@ export default function DashboardScreen() {
                   colors={[theme.colors.background.tertiary, theme.colors.primary.dark]}
                   style={styles.actionGradient}
                 >
-                  <Text style={styles.actionIcon}>😴</Text>
+                  <MaterialCommunityIcons name="bed" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Sleep</Text>
                 </LinearGradient>
               </TouchableOpacity>
@@ -511,11 +532,13 @@ const styles = StyleSheet.create({
   },
   actionGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: theme.spacing.sm,
   },
   actionButton: {
-    flex: 1,
-    marginHorizontal: theme.spacing.xs,
+    width: '48%',
+    marginBottom: theme.spacing.sm,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
     ...theme.shadows.md,

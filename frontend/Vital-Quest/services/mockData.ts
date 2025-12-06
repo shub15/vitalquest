@@ -488,21 +488,21 @@ export const mockChallenges: Challenge[] = [
 
 // Motivational Messages for AI Coach
 export const motivationalMessages = [
-  "You're doing amazing! Keep up the great work! 💪",
-  "Every step counts towards your goals! 🚶",
-  "Consistency is key to success! 🔥",
-  "You're stronger than you think! ⚡",
-  "Small progress is still progress! 🌟",
-  "Your future self will thank you! 🙏",
-  "One day at a time, one quest at a time! 📜",
-  "You've got this, champion! 👑",
-  "Your dedication is inspiring! ✨",
-  "Keep pushing forward, warrior! ⚔️",
-  "Health is wealth, and you're investing wisely! 💰",
-  "Your streak is on fire! Don't break it now! 🔥",
-  "Remember why you started! 💭",
-  "You're building a healthier, happier you! 😊",
-  "Every workout is a victory! 🏆",
+  "You're doing amazing! Keep up the great work!",
+  "Every step counts towards your goals!",
+  "Consistency is key to success!",
+  "You're stronger than you think!",
+  "Small progress is still progress!",
+  "Your future self will thank you!",
+  "One day at a time, one quest at a time!",
+  "You've got this, champion!",
+  "Your dedication is inspiring!",
+  "Keep pushing forward, warrior!",
+  "Health is wealth, and you're investing wisely!",
+  "Your streak is on fire! Don't break it now!",
+  "Remember why you started!",
+  "You're building a healthier, happier you!",
+  "Every workout is a victory!",
 ];
 
 // Tips for different categories

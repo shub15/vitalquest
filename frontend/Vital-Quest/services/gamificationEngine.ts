@@ -247,7 +247,7 @@ export const generateDailyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: tomorrow,
       streak: 0,
-      icon: '👣',
+      icon: 'shoe-print',
     },
     {
       id: `daily_exercise_${today.getTime()}`,
@@ -264,7 +264,7 @@ export const generateDailyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: tomorrow,
       streak: 0,
-      icon: '💪',
+      icon: 'dumbbell',
     },
     {
       id: `daily_water_${today.getTime()}`,
@@ -281,7 +281,7 @@ export const generateDailyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: tomorrow,
       streak: 0,
-      icon: '💧',
+      icon: 'water',
     },
     {
       id: `daily_meditation_${today.getTime()}`,
@@ -298,7 +298,7 @@ export const generateDailyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: tomorrow,
       streak: 0,
-      icon: '🧘',
+      icon: 'meditation',
     },
     {
       id: `daily_meals_${today.getTime()}`,
@@ -315,7 +315,7 @@ export const generateDailyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: tomorrow,
       streak: 0,
-      icon: '🍽️',
+      icon: 'food-apple',
     },
   ];
 };
@@ -342,7 +342,7 @@ export const generateWeeklyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: nextWeek,
       streak: 0,
-      icon: '🏃',
+      icon: 'run',
     },
     {
       id: `weekly_exercise_${today.getTime()}`,
@@ -359,7 +359,7 @@ export const generateWeeklyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: nextWeek,
       streak: 0,
-      icon: '⚡',
+      icon: 'flash',
     },
     {
       id: `weekly_meditation_${today.getTime()}`,
@@ -376,7 +376,7 @@ export const generateWeeklyQuests = (): Quest[] => {
       createdAt: today,
       dueDate: nextWeek,
       streak: 0,
-      icon: '🕉️',
+      icon: 'flower-tulip',
     },
   ];
 };

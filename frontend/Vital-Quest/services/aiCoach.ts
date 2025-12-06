@@ -35,7 +35,7 @@ export class AICoach {
         title: 'Boost Your Steps',
         message: `You're at ${todaySteps.toLocaleString()} steps today. Try a 15-minute walk to reach 7,500 steps!`,
         priority: 'high',
-        icon: '👣',
+        icon: 'shoe-print',
       });
     } else if (todaySteps >= 10000) {
       recommendations.push({
@@ -44,7 +44,7 @@ export class AICoach {
         title: 'Step Goal Crushed!',
         message: `Amazing! You've hit ${todaySteps.toLocaleString()} steps. Keep this momentum going!`,
         priority: 'low',
-        icon: '🎉',
+        icon: 'party-popper',
       });
     }
 
@@ -56,7 +56,7 @@ export class AICoach {
         title: 'Time to Move',
         message: 'You haven\'t exercised much today. A quick 20-minute workout can boost your energy!',
         priority: 'high',
-        icon: '💪',
+        icon: 'dumbbell',
       });
     } else if (todayExerciseMinutes >= 30) {
       recommendations.push({
@@ -65,7 +65,7 @@ export class AICoach {
         title: 'Workout Warrior!',
         message: `${todayExerciseMinutes} minutes of exercise today! Your consistency is paying off.`,
         priority: 'low',
-        icon: '🏆',
+        icon: 'trophy',
       });
     }
 
@@ -77,7 +77,7 @@ export class AICoach {
         title: 'Stay Hydrated',
         message: `You've only had ${todayWaterGlasses} glasses of water. Aim for 8 glasses daily for optimal health.`,
         priority: 'medium',
-        icon: '💧',
+        icon: 'water',
       });
     } else if (todayWaterGlasses >= 8) {
       recommendations.push({
@@ -86,7 +86,7 @@ export class AICoach {
         title: 'Hydration Hero!',
         message: 'Perfect hydration today! Your body thanks you.',
         priority: 'low',
-        icon: '✨',
+        icon: 'star-four-points',
       });
     }
 
@@ -105,7 +105,7 @@ export class AICoach {
           title: 'Prioritize Sleep',
           message: `Your average sleep is ${avgSleep.toFixed(1)} hours. Aim for 7-9 hours for better recovery.`,
           priority: 'high',
-          icon: '😴',
+          icon: 'bed',
         });
       } else if (avgSleep >= 7 && avgSleep <= 9) {
         recommendations.push({
@@ -114,7 +114,7 @@ export class AICoach {
           title: 'Sleep Champion!',
           message: `Great sleep pattern! ${avgSleep.toFixed(1)} hours is in the optimal range.`,
           priority: 'low',
-          icon: '🌙',
+          icon: 'moon-waning-crescent',
         });
       }
     }
@@ -127,7 +127,7 @@ export class AICoach {
         title: 'Streak Master!',
         message: `${user.stats.currentStreak} day streak! You're building incredible habits.`,
         priority: 'low',
-        icon: '🔥',
+        icon: 'fire',
       });
     } else if (user.stats.currentStreak === 0) {
       recommendations.push({
@@ -136,7 +136,7 @@ export class AICoach {
         title: 'Start Your Streak',
         message: 'Complete a quest today to start building your streak!',
         priority: 'medium',
-        icon: '⭐',
+        icon: 'star',
       });
     }
 
@@ -153,7 +153,7 @@ export class AICoach {
         title: 'Track Your Meals',
         message: 'Log your meals to get personalized nutrition insights!',
         priority: 'medium',
-        icon: '🍽️',
+        icon: 'food-apple',
       });
     }
 
@@ -165,7 +165,7 @@ export class AICoach {
         title: 'Welcome, Adventurer!',
         message: 'Focus on completing daily quests to level up quickly. Small consistent actions lead to big results!',
         priority: 'medium',
-        icon: '🎯',
+        icon: 'target',
       });
     }
 

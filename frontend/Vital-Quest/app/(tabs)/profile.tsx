@@ -3,6 +3,7 @@ import { CharacterAvatar } from '@/components/game/CharacterAvatar';
 import { gameConfig } from '@/constants/gameConfig';
 import { theme } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
@@ -98,22 +99,22 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>Character Stats</Text>
               <View style={styles.statsGrid}>
                 <View style={styles.statCard}>
-                  <Text style={styles.statIcon}>⭐</Text>
+                  <MaterialCommunityIcons name="crown" size={32} color={theme.colors.accent.gold} style={styles.statIcon} />
                   <Text style={styles.statValue}>{user.character.level}</Text>
                   <Text style={styles.statLabel}>Level</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statIcon}>💎</Text>
+                  <MaterialCommunityIcons name="star-four-points" size={32} color={theme.colors.stats.xp} style={styles.statIcon} />
                   <Text style={styles.statValue}>{user.character.totalXp.toLocaleString()}</Text>
                   <Text style={styles.statLabel}>Total XP</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statIcon}>❤️</Text>
+                  <MaterialCommunityIcons name="heart" size={32} color={theme.colors.stats.hp} style={styles.statIcon} />
                   <Text style={styles.statValue}>{user.character.hp}/{user.character.maxHp}</Text>
                   <Text style={styles.statLabel}>HP</Text>
                 </View>
                 <View style={styles.statCard}>
-                  <Text style={styles.statIcon}>💰</Text>
+                  <MaterialCommunityIcons name="hand-coin" size={32} color={theme.colors.accent.gold} style={styles.statIcon} />
                   <Text style={styles.statValue}>{user.character.gold.toLocaleString()}</Text>
                   <Text style={styles.statLabel}>Gold</Text>
                 </View>
@@ -125,19 +126,31 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>Progress</Text>
               <View style={styles.progressCard}>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>📜 Quests Completed</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="script-text-outline" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Quests Completed</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.totalQuestsCompleted}</Text>
                 </View>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>🏆 Achievements Unlocked</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="trophy" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Achievements Unlocked</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.totalAchievementsUnlocked}</Text>
                 </View>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>🔥 Current Streak</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="fire" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Current Streak</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.currentStreak} days</Text>
                 </View>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>🎯 Longest Streak</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="target" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Longest Streak</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.longestStreak} days</Text>
                 </View>
               </View>
@@ -148,15 +161,24 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>Health Stats</Text>
               <View style={styles.progressCard}>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>👣 Total Steps</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="shoe-print" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Total Steps</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.totalSteps.toLocaleString()}</Text>
                 </View>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>💪 Exercise Minutes</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="dumbbell" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Exercise Minutes</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.totalExerciseMinutes.toLocaleString()}</Text>
                 </View>
                 <View style={styles.progressRow}>
-                  <Text style={styles.progressLabel}>🧘 Meditation Minutes</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <MaterialCommunityIcons name="meditation" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
+                    <Text style={styles.progressLabel}>Meditation Minutes</Text>
+                  </View>
                   <Text style={styles.progressValue}>{user.stats.totalMeditationMinutes.toLocaleString()}</Text>
                 </View>
               </View>
@@ -189,7 +211,7 @@ export default function ProfileScreen() {
             
             {achievements.length === 0 && (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyIcon}>🏆</Text>
+                <MaterialCommunityIcons name="trophy-outline" size={64} color={theme.colors.text.tertiary} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyText}>
                   Complete quests and activities to unlock achievements!
                 </Text>
@@ -319,7 +341,8 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: -theme.spacing.xs,
+    justifyContent: 'space-between',
+    gap: theme.spacing.sm,
   },
   statCard: {
     width: '48%',
@@ -327,12 +350,11 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderRadius: theme.borderRadius.lg,
     alignItems: 'center',
-    margin: theme.spacing.xs,
+    marginBottom: theme.spacing.sm,
     borderWidth: 1,
     borderColor: theme.colors.primary.dark,
   },
   statIcon: {
-    fontSize: 36,
     marginBottom: theme.spacing.sm,
   },
   statValue: {
@@ -411,7 +433,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing['3xl'],
   },
   emptyIcon: {
-    fontSize: 64,
     marginBottom: theme.spacing.md,
   },
   emptyText: {

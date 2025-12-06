@@ -3,6 +3,7 @@ import { theme } from '@/constants/theme';
 import { generateMockLeaderboard, mockFriends, mockPendingRequests } from '@/services/mockSocialData';
 import { useGameStore } from '@/store/gameStore';
 import { useSocialStore } from '@/store/socialStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -48,7 +49,10 @@ export default function SocialScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>🏆 Social</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+            <MaterialCommunityIcons name="trophy" size={32} color={theme.colors.accent.gold} style={{ marginRight: 8 }} />
+            <Text style={styles.title}>Social</Text>
+          </View>
           <Text style={styles.subtitle}>Compete and connect with others</Text>
         </View>
 
@@ -124,10 +128,10 @@ export default function SocialScreen() {
                     </View>
                     <View style={styles.requestButtons}>
                       <TouchableOpacity style={styles.acceptButton}>
-                        <Text style={styles.acceptButtonText}>✓</Text>
+                        <MaterialCommunityIcons name="check" size={20} color={theme.colors.text.primary} />
                       </TouchableOpacity>
                       <TouchableOpacity style={styles.rejectButton}>
-                        <Text style={styles.rejectButtonText}>✕</Text>
+                        <MaterialCommunityIcons name="close" size={20} color={theme.colors.text.primary} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -161,8 +165,9 @@ export default function SocialScreen() {
 
             {/* Demo Notice */}
             <View style={styles.demoNotice}>
+              <MaterialCommunityIcons name="gamepad-variant" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
               <Text style={styles.demoText}>
-                🎮 Demo Mode: Social features use mock data for demonstration
+                Demo Mode: Social features use mock data for demonstration
               </Text>
             </View>
           </ScrollView>
@@ -357,6 +362,9 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
   },
   demoNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: theme.colors.background.tertiary,
     padding: theme.spacing.md,
     borderRadius: theme.borderRadius.lg,

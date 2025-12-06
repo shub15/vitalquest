@@ -1,16 +1,43 @@
 import { theme } from '@/constants/theme';
 import { Quest } from '@/types';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSequence,
-    withSpring,
-    withTiming
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming
 } from 'react-native-reanimated';
 import { ProgressBar } from './ProgressBar';
+
+// Helper to map legacy emojis/invalid names to valid MaterialCommunityIcons
+const getIconName = (iconName: string): any => {
+  const map: Record<string, string> = {
+    '👣': 'shoe-print',
+    '💪': 'dumbbell',
+    '💧': 'water',
+    '🧘': 'meditation',
+    '🍽️': 'food-apple',
+    '🏃': 'run',
+    '⚡': 'flash',
+    '🕉️': 'flower-tulip',
+    '😴': 'bed',
+    '🌙': 'moon-waning-crescent',
+    '🔥': 'fire',
+    '⭐': 'star',
+    '💰': 'hand-coin',
+    '🎉': 'party-popper',
+    '🏆': 'trophy',
+    '✨': 'star-four-points',
+    '🎯': 'target',
+    'coins': 'hand-coin',
+  };
+  
+  return map[iconName] || iconName;
+};
 
 interface QuestCardProps {
   quest: Quest;
@@ -104,7 +131,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <Text style={styles.icon}>{quest.icon}</Text>
+              <MaterialCommunityIcons name={getIconName(quest.icon)} size={28} color={theme.colors.text.primary} />
             </View>
             
             <View style={styles.headerInfo}>
@@ -131,9 +158,9 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
               disabled={isComplete}
             >
               {isComplete && (
-                <Animated.Text style={[styles.checkmark, checkAnimatedStyle]}>
-                  ✓
-                </Animated.Text>
+                <Animated.View style={[checkAnimatedStyle]}>
+                  <MaterialCommunityIcons name="check" size={20} color={theme.colors.text.primary} />
+                </Animated.View>
               )}
             </Pressable>
           </View>
@@ -158,16 +185,16 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
           {/* Rewards */}
           <View style={styles.rewards}>
             <View style={styles.reward}>
-              <Text style={styles.rewardIcon}>⭐</Text>
+              <MaterialCommunityIcons name="star" size={14} color={theme.colors.text.secondary} style={{ marginRight: 4 }} />
               <Text style={styles.rewardText}>+{quest.xpReward} XP</Text>
             </View>
             <View style={styles.reward}>
-              <Text style={styles.rewardIcon}>💰</Text>
+              <MaterialCommunityIcons name="hand-coin" size={14} color={theme.colors.text.secondary} style={{ marginRight: 4 }} />
               <Text style={styles.rewardText}>+{quest.goldReward} Gold</Text>
             </View>
             {quest.streak > 0 && (
               <View style={styles.reward}>
-                <Text style={styles.rewardIcon}>🔥</Text>
+                <MaterialCommunityIcons name="fire" size={14} color={theme.colors.text.secondary} style={{ marginRight: 4 }} />
                 <Text style={styles.rewardText}>{quest.streak} streak</Text>
               </View>
             )}
@@ -233,7 +260,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: theme.borderRadius.sm,
     borderWidth: 1,
-    backgroundColor: 'transparent',
+    borderColor: theme.colors.text.tertiary, // Fallback if getDifficultyColor logic is skipped in styling array
   },
   badgeText: {
     fontSize: theme.typography.fontSize.xs,
@@ -259,11 +286,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.status.success,
     borderColor: theme.colors.status.success,
   },
-  checkmark: {
-    fontSize: 20,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
   description: {
     fontSize: theme.typography.fontSize.sm,
     color: theme.colors.text.secondary,
@@ -286,10 +308,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.full,
     marginRight: theme.spacing.sm,
     marginTop: theme.spacing.xs,
-  },
-  rewardIcon: {
-    fontSize: theme.typography.fontSize.sm,
-    marginRight: 4,
   },
   rewardText: {
     fontSize: theme.typography.fontSize.xs,

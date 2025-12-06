@@ -1,6 +1,7 @@
 import { QuestCard } from '@/components/game/QuestCard';
 import { theme } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -66,7 +67,7 @@ export default function QuestsScreen() {
             {dailyQuests.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionIcon}>📅</Text>
+                  <MaterialCommunityIcons name="calendar-clock" size={24} color={theme.colors.text.primary} style={styles.sectionIcon} />
                   <Text style={styles.sectionTitle}>Daily Quests</Text>
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{dailyQuests.length}</Text>
@@ -86,7 +87,7 @@ export default function QuestsScreen() {
             {weeklyQuests.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionIcon}>📆</Text>
+                  <MaterialCommunityIcons name="calendar-week" size={24} color={theme.colors.text.primary} style={styles.sectionIcon} />
                   <Text style={styles.sectionTitle}>Weekly Challenges</Text>
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{weeklyQuests.length}</Text>
@@ -106,7 +107,7 @@ export default function QuestsScreen() {
             {customQuests.length > 0 && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionIcon}>⭐</Text>
+                  <MaterialCommunityIcons name="star" size={24} color={theme.colors.accent.gold} style={styles.sectionIcon} />
                   <Text style={styles.sectionTitle}>Custom Goals</Text>
                   <View style={styles.badge}>
                     <Text style={styles.badgeText}>{customQuests.length}</Text>
@@ -124,7 +125,7 @@ export default function QuestsScreen() {
             
             {activeQuests.length === 0 && (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyIcon}>🎉</Text>
+                <MaterialCommunityIcons name="party-popper" size={64} color={theme.colors.text.tertiary} style={{ marginBottom: 16 }} />
                 <Text style={styles.emptyTitle}>All Caught Up!</Text>
                 <Text style={styles.emptyText}>
                   You've completed all your quests. New daily quests will appear tomorrow!
@@ -137,7 +138,7 @@ export default function QuestsScreen() {
             {/* Completed Quests */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionIcon}>✅</Text>
+                <MaterialCommunityIcons name="check-circle" size={24} color={theme.colors.stats.xp} style={styles.sectionIcon} />
                 <Text style={styles.sectionTitle}>Recently Completed</Text>
               </View>
               {recentCompleted.length > 0 ? (
@@ -146,7 +147,7 @@ export default function QuestsScreen() {
                 ))
               ) : (
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyIcon}>📜</Text>
+                  <MaterialCommunityIcons name="script-text-outline" size={64} color={theme.colors.text.tertiary} style={{ marginBottom: 16 }} />
                   <Text style={styles.emptyTitle}>No Completed Quests Yet</Text>
                   <Text style={styles.emptyText}>
                     Start completing quests to build your achievement history!
@@ -163,7 +164,7 @@ export default function QuestsScreen() {
             colors={theme.colors.gradients.primary}
             style={styles.createGradient}
           >
-            <Text style={styles.createIcon}>➕</Text>
+            <MaterialCommunityIcons name="plus" size={24} color={theme.colors.text.primary} style={{ marginRight: 8 }} />
             <Text style={styles.createText}>Create Custom Quest</Text>
           </LinearGradient>
         </TouchableOpacity>

@@ -1,5 +1,6 @@
 import { theme } from '@/constants/theme';
 import { LeaderboardEntry } from '@/store/socialStore';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -21,11 +22,15 @@ export function Leaderboard({ entries, period }: LeaderboardProps) {
     }
   };
 
-  const getMedalEmoji = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return `#${rank}`;
+  const renderRank = (rank: number) => {
+    if (rank === 1) return <MaterialCommunityIcons name="medal" size={28} color={theme.colors.accent.gold} />;
+    if (rank === 2) return <MaterialCommunityIcons name="medal" size={28} color="#C0C0C0" />;
+    if (rank === 3) return <MaterialCommunityIcons name="medal" size={28} color="#CD7F32" />;
+    return (
+      <Text style={[styles.rank, rank <= 3 && styles.topRank]}>
+        #{rank}
+      </Text>
+    );
   };
 
   return (
@@ -45,9 +50,7 @@ export function Leaderboard({ entries, period }: LeaderboardProps) {
           >
             {/* Rank */}
             <View style={styles.rankContainer}>
-              <Text style={[styles.rank, entry.rank <= 3 && styles.topRank]}>
-                {getMedalEmoji(entry.rank)}
-              </Text>
+              {renderRank(entry.rank)}
             </View>
 
             {/* Avatar */}

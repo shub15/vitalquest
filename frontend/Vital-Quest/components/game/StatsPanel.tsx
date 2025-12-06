@@ -1,4 +1,5 @@
 import { theme } from '@/constants/theme';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -99,7 +100,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
         {/* HP Bar */}
         <Animated.View style={[styles.statRow, hpAnimatedStyle]}>
           <View style={styles.statHeader}>
-            <Text style={styles.statIcon}>❤️</Text>
+            <MaterialCommunityIcons name="heart" size={18} color={theme.colors.stats.hp} style={{ marginRight: 4 }} />
             <Text style={styles.statLabel}>HP</Text>
           </View>
           <ProgressBar
@@ -115,7 +116,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
         {/* XP Bar */}
         <View style={styles.statRow}>
           <View style={styles.statHeader}>
-            <Text style={styles.statIcon}>⭐</Text>
+            <MaterialCommunityIcons name="star" size={18} color={theme.colors.stats.xp} style={{ marginRight: 4 }} />
             <Text style={styles.statLabel}>XP</Text>
           </View>
           <ProgressBar
@@ -131,13 +132,13 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
         {/* Gold & Streak */}
         <View style={styles.bottomRow}>
           <View style={styles.goldContainer}>
-            <Text style={styles.goldIcon}>💰</Text>
+            <MaterialCommunityIcons name="hand-coin" size={18} color={theme.colors.accent.gold} style={{ marginRight: 4 }} />
             <Text style={styles.goldText}>{gold.toLocaleString()}</Text>
           </View>
           
           {streak > 0 && (
             <Animated.View style={[styles.streakContainer, streakAnimatedStyle]}>
-              <Text style={styles.streakIcon}>🔥</Text>
+              <MaterialCommunityIcons name="fire" size={18} color={theme.colors.status.warning} style={{ marginRight: 4 }} />
               <Text style={styles.streakText}>{streak} day{streak !== 1 ? 's' : ''}</Text>
             </Animated.View>
           )}

@@ -101,10 +101,8 @@ def calculate_recovery_score(log: DailyLog) -> dict:
     
     status = "READY_TO_TRAIN"
     if score < 50 or physical_recovery_low: 
-        # PRD prompt logic implies <50 is bad. 
-        # PRD item 57 says "flag PHYSICAL_RECOVERY_LOW".
-        # Let's return status based on score generally, but maybe override if deep sleep is critical?
-        status = "REST_MODE" if score < 50 else "READY_TO_TRAIN"
+        # Enforce REST_MODE if score is low OR deep sleep is critical
+        status = "REST_MODE"
 
     return {
         "score": score,

@@ -1,10 +1,20 @@
 from fastapi import FastAPI, HTTPException, Body
-from fastapi.staticfiles import StaticFiles
 from schemas.vital_quest import DailyLog
 from app.logic import calculate_recovery_score, calculate_battle_score
 from app.ai_service import get_coach_feedback
 
-app = FastAPI(title="Vital Quest Backend")
+from app.recap_service import get_aggregated_stats
+
+@app.get("/recap/{timeframe}")
+def get_recap(timeframe: str):
+    """
+    Get aggregated stats for 'daily', 'weekly', 'monthly', 'yearly'.
+    """
+    valid_frames = ['daily', 'weekly', 'monthly', 'yearly']
+    if timeframe not in valid_frames:
+        raise HTTPException(status_code=400, detail="Invalid timeframe")
+    
+    return get_aggregated_stats(timeframe)
 
 @app.post("/analyze/recovery")
 def analyze_recovery(log: DailyLog):
@@ -43,7 +53,4 @@ async def analyze_coach(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Serve Static Files (UI)
-# We handle 404s by falling back to index.html for SPA-like feel if needed, 
-# but for now standard static serve is fine.
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+

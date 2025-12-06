@@ -18,7 +18,7 @@ async def get_coach_feedback(context_type: str, data: DailyLog) -> str:
     if not GOOGLE_API_KEY:
         return "AI Coach unavailable: GOOGLE_API_KEY not set."
 
-    model = genai.GenerativeModel('gemini-pro')
+    model = genai.GenerativeModel('gemini-2.0-flash')
     
     recovery_data = calculate_recovery_score(data)
     score = recovery_data["score"]
@@ -26,47 +26,49 @@ async def get_coach_feedback(context_type: str, data: DailyLog) -> str:
     deep_sleep = recovery_data["deep_sleep_minutes"]
     status = recovery_data["status"]
 
-    prompt = ""
-
     if context_type == "PLANNING":
         # Mode 1: Morning Plan
-        # System Prompt: "Analyze Deep Sleep and True_RHR. If recovery is <50, suggest a lighter version of their usual workout."
+        # Extract recent history (workouts in the log)
+        history_str = "None"
+        if data.manual_workouts:
+            history_str = "; ".join(
+                [f"{w.activity_type} (RPE {w.intensity_rpe}, {w.duration_minutes}m)" for w in data.manual_workouts]
+            )
+
         prompt = (
-            f"You are a fitness coach. Analyze the following biometrics:\n"
-            f"- Recovery Score: {score} ({status})\n"
-            f"- Deep Sleep: {deep_sleep} minutes\n"
-            f"- Resting Heart Rate: {true_rhr} bpm\n\n"
-            f"If recovery is < 50, strictly suggest a lighter version of their usual workout. "
-            f"If recovery is good, encourage them to train hard. Keep it brief and motivating."
+            f"Role: Concise Fitness Coach for Mobile App.\n"
+            f"Stats:\n"
+            f"- Sleep: {int(data.total_elements_sleep_minutes if hasattr(data, 'total_elements_sleep_minutes') else sum(s.duration_minutes for s in data.sleep_segments))}m (Deep: {deep_sleep}m)\n"
+            f"- RHR: {true_rhr} bpm\n"
+            f"- Recovery: {score}/100 ({status})\n"
+            f"- Recent History: {history_str}\n\n"
+            f"Task: Provide ultra-short feedback. No conversational filler.\n"
+            f"Format:\n"
+            f"**Sleep:** [1 sentence evaluation]\n"
+            f"**Recovery:** [1 sentence analysis]\n"
+            f"**Workout:** [Suggest 1 specific workout based on history/recovery]\n"
+            f"**Tip:** [1 actionable bullet point]"
         )
 
     elif context_type == "ANALYSIS":
         # Mode 2: Post-Workout Analysis
-        # Trigger: User logs a ManualWorkout.
-        # We need the LATEST manual workout or all of them? 
-        # PRD says: "User burnt {calories_burnt} kcal in {activity_type}."
-        # We'll summarize the workouts or take the last one.
-        
         if not data.manual_workouts:
-            return "No workouts found to analyze."
+            return "No workouts found."
             
-        # Let's analyze the most recent one or summarize total. 
-        # Assuming we just want to comment on the aggregate or the "session".
-        # Let's aggregate for simplicity or pick the last one.
-        # PRD implies a single event "Trigger: User logs a ManualWorkout".
-        # But DailyLog has a list. We will consider the SUM or the last added.
-        # Let's use the last one in the list as the 'triggering' event.
         last_workout = data.manual_workouts[-1]
         
         prompt = (
-            f"You are a fitness coach. The user just finished a workout:\n"
-            f"- Activity: {last_workout.activity_type}\n"
-            f"- Calories Burnt: {last_workout.calories_burnt} kcal\n"
-            f"- Bio-Recovery Score: {score} ({status})\n\n"
-            f"Logic to follow:\n"
-            f"1. If Recovery was LOW (<50) but they burnt >500 kcal: Warn them about potential immune system suppression.\n"
-            f"2. If Recovery was HIGH (>50) and they burnt >500 kcal: Praise them for utilizing their peak energy.\n"
-            f"3. Otherwise, provide constructive feedback based on the effort."
+            f"Role: Concise Fitness Coach for Mobile App.\n"
+            f"Workout: {last_workout.activity_type} ({last_workout.duration_minutes}m, RPE {last_workout.intensity_rpe}, {last_workout.calories_burnt}kcal)\n"
+            f"Recovery Status: {score} ({status})\n\n"
+            f"Task: Post-workout stats. Extremely concise. No 'Great job' intros.\n"
+            f"Format:\n"
+            f"**Analysis:** [1 sentence on load vs recovery]\n"
+            f"**Sleep Need:** [1 sentence recommending duration]\n"
+            f"**Recovery Tips:**\n"
+            f"- [Tip 1]\n"
+            f"- [Tip 2]\n"
+            f"(Max 2 tips, 1 line each)"
         )
     else:
         return "Invalid context type."

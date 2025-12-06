@@ -74,74 +74,64 @@ def test_calculate_rhr_main_sleep():
     assert result["rhr"] == 60
     assert result["source"] == "main_sleep"
 
-def test_recovery_score_logic():
-    # Base 70
-    # > 7 hrs sleep (+15)
-    # Deep sleep < 45 (-15)
-    # Workout intensity > 8 (-10)
+@pytest.mark.parametrize("sleep_mins, deep_mins, max_intensity, expected_score, expected_status", [
+    # 1. Base Case: Sleep <= 7h (0), Deep >= 45 (0), Strain <= 8 (0) -> 70
+    (420, 45, 8, 70, "READY_TO_TRAIN"), 
     
-    # Case 1: Perfect Sleep, No Strain
-    # 8 hrs sleep (480 mins), 60 mins deep sleep. No high intensity workout.
-    # Score = 70 + 15 (quantity) = 85. (Deep sleep ok, so no penalty).
-    
+    # 2. High Sleep (+15): Sleep > 7h (421), Deep >= 45 (0), Strain <= 8 (0) -> 85
+    (421, 45, 8, 85, "READY_TO_TRAIN"),
+
+    # 3. Low Deep Sleep (-15): Sleep <= 7h (0), Deep < 45 (-15), Strain <= 8 (0) -> 55
+    # Enforced REST_MODE due to Low Deep Sleep flag
+    (420, 44, 8, 55, "REST_MODE"),
+
+    # 4. High Strain (-10): Sleep <= 7h (0), Deep >= 45 (0), Strain > 8 (-10) -> 60
+    (420, 45, 9, 60, "READY_TO_TRAIN"),
+
+    # 5. High Sleep (+15) & Low Deep (-15) -> 70
+    # Enforced REST_MODE due to Low Deep Sleep
+    (421, 44, 8, 70, "REST_MODE"),
+
+    # 6. High Sleep (+15) & High Strain (-10) -> 75
+    (421, 45, 9, 75, "READY_TO_TRAIN"),
+
+    # 7. Low Deep (-15) & High Strain (-10) -> 45
+    # Score 45 < 50, Status REST_MODE
+    (420, 44, 9, 45, "REST_MODE"),
+
+    # 8. All Triggers: High Sleep (+15), Low Deep (-15), High Strain (-10) -> 60
+    # Enforced REST_MODE due to Low Deep Sleep
+    (421, 44, 9, 60, "REST_MODE"),
+])
+def test_recovery_score_parametrized(sleep_mins, deep_mins, max_intensity, expected_score, expected_status):
     log = DailyLog(
         date=date(2025, 12, 6),
-        total_steps=0, total_calories_active=0,
+        total_steps=5000, 
+        total_calories_active=200,
         sleep_segments=[
             SleepSegment(
                 start_time=datetime(2025, 12, 6, 23, 0),
-                end_time=datetime(2025, 12, 7, 7, 0),
+                end_time=datetime(2025, 12, 6, 23, 0) + timedelta(minutes=sleep_mins),
                 stage=SleepStage.light,
-                duration_minutes=420 # 7h
-            ),
-             SleepSegment(
-                start_time=datetime(2025, 12, 7, 2, 0),
-                end_time=datetime(2025, 12, 7, 3, 0),
-                stage=SleepStage.deep,
-                duration_minutes=60 # 1h
-            )
-        ],
-        # Total sleep = 480 mins > 420. +15.
-        # Deep sleep = 60 > 45. No penalty.
-        manual_workouts=[]
-    )
-    
-    result = calculate_recovery_score(log)
-    assert result["score"] == 85
-    assert result["status"] == "READY_TO_TRAIN"
-
-    # Case 2: Poor Sleep, High Strain
-    # 6 hours sleep (360 mins). Deep sleep 30 mins. Workout intensity 9.
-    # Base 70
-    # Sleep Quantity <= 7h. (0)
-    # Deep Sleep < 45. (-15) -> 55
-    # Strain > 8. (-10) -> 45
-    # Result 45. REST_MODE.
-    
-    log2 = DailyLog(
-        date=date(2025, 12, 6),
-        total_steps=0, total_calories_active=0,
-        sleep_segments=[
-            SleepSegment(
-                start_time=datetime(2025, 12, 6, 23, 0),
-                end_time=datetime(2025, 12, 7, 5, 0),
-                stage=SleepStage.deep,
-                duration_minutes=30 
+                duration_minutes=sleep_mins - deep_mins
             ),
              SleepSegment(
                 start_time=datetime(2025, 12, 6, 23, 0),
-                end_time=datetime(2025, 12, 7, 5, 0),
-                stage=SleepStage.light,
-                duration_minutes=330 
+                end_time=datetime(2025, 12, 6, 23, 0) + timedelta(minutes=deep_mins),
+                stage=SleepStage.deep,
+                duration_minutes=deep_mins
             )
         ],
         manual_workouts=[
             ManualWorkout(
-                activity_type="Run", duration_minutes=30, intensity_rpe=9, calories_burnt=300
+                activity_type="Test", 
+                duration_minutes=30, 
+                intensity_rpe=max_intensity, 
+                calories_burnt=100
             )
         ]
     )
     
-    result2 = calculate_recovery_score(log2)
-    assert result2["score"] == 45
-    assert result2["status"] == "REST_MODE"
+    result = calculate_recovery_score(log)
+    assert result["score"] == expected_score, f"Failed for Sleep={sleep_mins}, Deep={deep_mins}, Strain={max_intensity}"
+    assert result["status"] == expected_status, f"Status Mismatch for Score={result['score']}"

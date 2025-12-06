@@ -1,6 +1,6 @@
 import { HealthActivity } from '@/types';
 import { Platform } from 'react-native';
-import { initialize, readRecords, requestPermission, SdkAvailabilityStatus } from 'react-native-health-connect';
+import { initialize, readRecords, requestPermission } from 'react-native-health-connect';
 
 // Health Connect record types
 export enum HealthConnectPermission {
@@ -17,7 +17,7 @@ export enum HealthConnectPermission {
  */
 export async function isHealthConnectAvailable(): Promise<boolean> {
   console.log('[Health Connect] Checking availability...');
-  
+
   if (Platform.OS !== 'android') {
     console.warn('[Health Connect] Not on Android, Health Connect unavailable');
     return false;
@@ -26,7 +26,8 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
   try {
     const status = await initialize();
     console.log('[Health Connect] SDK Status:', status);
-    const isAvailable = status === SdkAvailabilityStatus.SDK_AVAILABLE;
+    // initialize() returns true when SDK is available
+    const isAvailable = status === true;
     console.log('[Health Connect] Is Available:', isAvailable);
     return isAvailable;
   } catch (error) {
@@ -40,7 +41,7 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
  */
 export async function requestHealthConnectPermissions(): Promise<boolean> {
   console.log('[Health Connect] Requesting permissions...');
-  
+
   if (Platform.OS !== 'android') {
     console.warn('[Health Connect] Not on Android, skipping permissions');
     return false;
@@ -71,7 +72,7 @@ export async function requestHealthConnectPermissions(): Promise<boolean> {
  */
 export async function getStepsData(startDate: Date, endDate: Date): Promise<number> {
   console.log('[Health Connect] Fetching steps data from', startDate.toISOString(), 'to', endDate.toISOString());
-  
+
   try {
     const result: any = await readRecords(HealthConnectPermission.STEPS, {
       timeRangeFilter: {
@@ -105,7 +106,7 @@ export async function getStepsData(startDate: Date, endDate: Date): Promise<numb
  */
 export async function getExerciseSessions(startDate: Date, endDate: Date): Promise<HealthActivity[]> {
   console.log('[Health Connect] Fetching exercise sessions from', startDate.toISOString(), 'to', endDate.toISOString());
-  
+
   try {
     const result: any = await readRecords(HealthConnectPermission.EXERCISE_SESSION, {
       timeRangeFilter: {
@@ -118,7 +119,7 @@ export async function getExerciseSessions(startDate: Date, endDate: Date): Promi
     console.log('[Health Connect] Exercise result:', JSON.stringify(result, null, 2));
 
     const activities: HealthActivity[] = [];
-    
+
     if (Array.isArray(result)) {
       result.forEach((record: any) => {
         const startTime = new Date(record.startTime);
@@ -155,7 +156,7 @@ export async function getExerciseSessions(startDate: Date, endDate: Date): Promi
  */
 export async function getSleepData(startDate: Date, endDate: Date): Promise<HealthActivity[]> {
   console.log('[Health Connect] Fetching sleep data from', startDate.toISOString(), 'to', endDate.toISOString());
-  
+
   try {
     const result: any = await readRecords(HealthConnectPermission.SLEEP_SESSION, {
       timeRangeFilter: {
@@ -168,7 +169,7 @@ export async function getSleepData(startDate: Date, endDate: Date): Promise<Heal
     console.log('[Health Connect] Sleep result:', JSON.stringify(result, null, 2));
 
     const sleepActivities: HealthActivity[] = [];
-    
+
     if (Array.isArray(result)) {
       result.forEach((record: any) => {
         const startTime = new Date(record.startTime);
@@ -206,7 +207,7 @@ export async function getSleepData(startDate: Date, endDate: Date): Promise<Heal
  */
 export async function getHeartRateData(startDate: Date, endDate: Date): Promise<number> {
   console.log('[Health Connect] Fetching heart rate from', startDate.toISOString(), 'to', endDate.toISOString());
-  
+
   try {
     const result: any = await readRecords(HealthConnectPermission.HEART_RATE, {
       timeRangeFilter: {
@@ -251,10 +252,10 @@ export async function syncTodayHealthData(): Promise<{
   avgHeartRate: number;
 }> {
   console.log('[Health Connect] === SYNCING TODAY\'S DATA ===');
-  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -356,16 +357,16 @@ function determineSleepQuality(durationHours: number): 'poor' | 'fair' | 'good' 
  */
 export async function initializeHealthConnect(): Promise<boolean> {
   console.log('[Health Connect] === INITIALIZING ===');
-  
+
   const isAvailable = await isHealthConnectAvailable();
-  
+
   if (!isAvailable) {
     console.warn('[Health Connect] Not available on this device');
     return false;
   }
 
   const hasPermissions = await requestHealthConnectPermissions();
-  
+
   if (!hasPermissions) {
     console.warn('[Health Connect] Permissions not granted');
     return false;

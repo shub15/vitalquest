@@ -11,7 +11,6 @@ import { initialAchievements } from '@/services/mockData';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -111,10 +110,7 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <LinearGradient
-        colors={[theme.colors.background.primary, theme.colors.background.primary]}
-        style={styles.container}
-      >
+      <View style={styles.container}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -257,63 +253,45 @@ export default function DashboardScreen() {
             <Text style={styles.sectionTitle}>Quick Actions</Text>
             <View style={styles.actionGrid}>
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('steps')}>
-                <LinearGradient
-                  colors={theme.colors.gradients.primary}
-                  style={styles.actionGradient}
-                >
+                <View style={styles.actionContent}>
                   <MaterialCommunityIcons name="shoe-print" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Steps</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('water')}>
-                <LinearGradient
-                  colors={[theme.colors.stats.mana, theme.colors.primary.main]}
-                  style={styles.actionGradient}
-                >
+                <View style={styles.actionContent}>
                   <MaterialCommunityIcons name="water" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Water</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meal')}>
-                <LinearGradient
-                  colors={theme.colors.gradients.gold}
-                  style={styles.actionGradient}
-                >
+                <View style={styles.actionContent}>
                   <MaterialCommunityIcons name="food-apple" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Meal</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('exercise')}>
-                <LinearGradient
-                  colors={theme.colors.gradients.health}
-                  style={styles.actionGradient}
-                >
+                <View style={styles.actionContent}>
                   <MaterialCommunityIcons name="dumbbell" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Exercise</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meditation')}>
-                <LinearGradient
-                  colors={[theme.colors.quest.weekly, theme.colors.primary.main]}
-                  style={styles.actionGradient}
-                >
+                <View style={styles.actionContent}>
                   <MaterialCommunityIcons name="meditation" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Meditate</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('sleep')}>
-                <LinearGradient
-                  colors={theme.colors.gradients.card}
-                  style={styles.actionGradient}
-                >
+                <View style={styles.actionContent}>
                   <MaterialCommunityIcons name="bed" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
                   <Text style={styles.actionText}>Sleep</Text>
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -328,7 +306,7 @@ export default function DashboardScreen() {
           onClose={() => setModalVisible(false)}
           type={modalType}
         />
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -439,15 +417,14 @@ const styles = StyleSheet.create({
     width: '48%',
     marginBottom: theme.spacing.sm,
     borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
     borderWidth: 1,
     borderColor: theme.colors.border.subtle,
-    ...theme.shadows.md,
+    backgroundColor: theme.colors.background.tertiary,
+    ...theme.shadows.sm,
   },
-  actionGradient: {
+  actionContent: {
     padding: theme.spacing.lg,
     alignItems: 'center',
-    borderRadius: theme.borderRadius.lg,
   },
   syncButtons: {
     flexDirection: 'row',

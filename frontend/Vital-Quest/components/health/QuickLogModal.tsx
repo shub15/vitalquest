@@ -2,7 +2,6 @@ import { theme } from '@/constants/theme';
 import { calculateXpForActivity } from '@/services/gamificationEngine';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
   Modal,
@@ -132,10 +131,7 @@ export function QuickLogModal({ visible, onClose, type }: QuickLogModalProps) {
     >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
-          <LinearGradient
-            colors={theme.colors.gradients.card}
-            style={styles.modalContent}
-          >
+          <View style={styles.modalContent}>
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.icon}>{config.icon}</Text>
@@ -184,17 +180,12 @@ export function QuickLogModal({ visible, onClose, type }: QuickLogModalProps) {
                 onPress={handleSubmit}
                 disabled={isLoading || (!value && type !== 'meal')}
               >
-                <LinearGradient
-                  colors={theme.colors.gradients.primary}
-                  style={styles.submitGradient}
-                >
-                  <Text style={styles.submitText}>
-                    {isLoading ? 'Logging...' : 'Log Activity'}
-                  </Text>
-                </LinearGradient>
+                <Text style={styles.submitText}>
+                  {isLoading ? 'Logging...' : 'Log Activity'}
+                </Text>
               </TouchableOpacity>
             </View>
-          </LinearGradient>
+          </View>
         </View>
       </View>
     </Modal>
@@ -217,6 +208,8 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background.card,
+    ...theme.shadows.lg,
   },
   header: {
     alignItems: 'center',
@@ -283,13 +276,12 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     flex: 1,
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-    ...theme.shadows.glow,
-  },
-  submitGradient: {
     padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.primary.main,
+    ...theme.shadows.md,
   },
   submitText: {
     fontSize: theme.typography.fontSize.sm,

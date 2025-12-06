@@ -1,6 +1,5 @@
 import { theme } from '@/constants/theme';
 import { Achievement } from '@/types';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -90,10 +89,10 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({ achievement,
       onPress={handlePress}
       activeOpacity={0.8}
     >
-      <LinearGradient
-        colors={achievement.unlocked ? getRarityGradient() : ['#1E1538', '#2D1B4E'] as const}
-        style={styles.gradient}
-      >
+      <View style={[
+        styles.content,
+        achievement.unlocked && { backgroundColor: getRarityColor() }
+      ]}>
         {/* Shine Effect */}
         {achievement.unlocked && (
           <Animated.View style={[styles.shine, shineStyle]} />
@@ -134,7 +133,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({ achievement,
         <View style={[styles.rarityBadge, { backgroundColor: getRarityColor() }]}>
           <Text style={styles.rarityText}>{achievement.rarity.toUpperCase()}</Text>
         </View>
-      </LinearGradient>
+      </View>
     </AnimatedTouchable>
   );
 };
@@ -151,9 +150,10 @@ const styles = StyleSheet.create({
   locked: {
     opacity: 0.6,
   },
-  gradient: {
+  content: {
     flex: 1,
     padding: theme.spacing.md,
+    backgroundColor: theme.colors.background.tertiary,
     borderWidth: 1,
     borderColor: theme.colors.border.subtle,
     borderRadius: theme.borderRadius.xl,

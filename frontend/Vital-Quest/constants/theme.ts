@@ -138,35 +138,49 @@ export const theme = {
     full: 9999,
   },
   
-  // Modern Shadows (Subtle Glows)
+  // Modern Shadows - Material UI Style
   shadows: {
+    none: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0,
+      shadowRadius: 0,
+      elevation: 0,
+    },
     sm: {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3,
       elevation: 2,
     },
     md: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
-      shadowRadius: 8,
+      shadowRadius: 5,
       elevation: 4,
     },
     lg: {
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 16,
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
       elevation: 8,
     },
-    // Glow effects
+    xl: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+      elevation: 12,
+    },
+    // Glow effects (kept for special cases)
     glow: {
       shadowColor: '#38BDF8',
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.2,
-      shadowRadius: 12,
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
       elevation: 4,
     },
   },

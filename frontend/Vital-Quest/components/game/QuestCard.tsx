@@ -1,7 +1,6 @@
 import { theme } from '@/constants/theme';
 import { Quest } from '@/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -123,11 +122,8 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
       onPress={handlePress}
       activeOpacity={0.9}
     >
-      <LinearGradient
-        colors={isComplete ? [theme.colors.quest.completed, theme.colors.status.success] : theme.colors.gradients.card}
-        style={styles.gradient}
-      >
-        <View style={styles.content}>
+      <View style={[styles.content, isComplete && styles.completedContent]}>
+        <View style={styles.contentInner}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconContainer}>
@@ -200,7 +196,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
             )}
           </View>
         </View>
-      </LinearGradient>
+      </View>
     </AnimatedTouchable>
   );
 };
@@ -215,12 +211,16 @@ const styles = StyleSheet.create({
   completedContainer: {
     opacity: 0.8,
   },
-  gradient: {
+  content: {
+    backgroundColor: theme.colors.background.card,
     borderWidth: 1,
     borderColor: theme.colors.border.subtle,
     borderRadius: theme.borderRadius.xl,
   },
-  content: {
+  completedContent: {
+    backgroundColor: theme.colors.quest.completed,
+  },
+  contentInner: {
     padding: theme.spacing.md,
   },
   header: {

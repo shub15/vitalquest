@@ -1,6 +1,5 @@
 import { theme } from '@/constants/theme';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -86,13 +85,10 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
     <View style={styles.container}>
       {/* Level Badge */}
       <View style={styles.levelBadge}>
-        <LinearGradient
-          colors={theme.colors.gradients.gold}
-          style={styles.levelGradient}
-        >
+        <View style={styles.levelContent}>
           <Text style={styles.levelText}>LVL</Text>
           <Text style={styles.levelNumber}>{level}</Text>
-        </LinearGradient>
+        </View>
       </View>
       
       {/* Stats Container */}
@@ -163,11 +159,12 @@ const styles = StyleSheet.create({
     height: 70,
     marginRight: theme.spacing.md,
   },
-  levelGradient: {
+  levelContent: {
     flex: 1,
     borderRadius: theme.borderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.accent.gold,
     borderWidth: 2,
     borderColor: theme.colors.accent.gold,
   },

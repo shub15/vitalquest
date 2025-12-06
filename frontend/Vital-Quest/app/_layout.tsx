@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { useHealthDataSync, useNotificationSetup } from '@/hooks/useHealthDataSync';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -51,6 +52,12 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  
+  // Initialize automated health data syncing
+  useHealthDataSync();
+  
+  // Initialize notifications
+  useNotificationSetup();
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

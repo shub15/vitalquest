@@ -24,7 +24,7 @@ export function useHealthDataSync() {
         setHasInitialized(true);
       });
     }
-  }, [isAvailable, user, hasInitialized, isInitialized]); // Only run when these change
+  }, [isAvailable, user, hasInitialized, isInitialized, initialize]); // Now safe to include
 
   // Sync when app comes to foreground
   useEffect(() => {

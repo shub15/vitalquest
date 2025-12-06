@@ -7,7 +7,7 @@ import {
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
 import { HealthActivity } from '@/types';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Custom hook to manage Health Connect integration
@@ -37,7 +37,7 @@ export function useHealthConnectSync() {
     }
   };
 
-  const initialize = async (): Promise<boolean> => {
+  const initialize = useCallback(async (): Promise<boolean> => {
     console.log('[useHealthConnectSync] Initializing...');
     try {
       setError(null);
@@ -57,9 +57,9 @@ export function useHealthConnectSync() {
       setError('Failed to initialize Health Connect');
       return false;
     }
-  };
+  }, []); // No dependencies - function is stable
 
-  const syncData = async (): Promise<boolean> => {
+  const syncData = useCallback(async (): Promise<boolean> => {
     console.log('[useHealthConnectSync] === STARTING SYNC ===');
     
     if (!isInitialized) {
@@ -180,7 +180,7 @@ export function useHealthConnectSync() {
       setSyncStatus(false);
       return false;
     }
-  };
+  }, [isInitialized, initialize, setSyncStatus, importHealthData, user, addXp]);
 
   return {
     isAvailable,

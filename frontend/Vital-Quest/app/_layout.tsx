@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { useHealthDataSync, useNotificationSetup } from '@/hooks/useHealthDataSync';
+import { useNotificationSetup } from '@/hooks/useHealthDataSync';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -53,8 +53,9 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   
+  // DISABLED: Auto-sync causing conflicts with manual sync button
   // Initialize automated health data syncing
-  useHealthDataSync();
+  // useHealthDataSync();
   
   // Initialize notifications
   useNotificationSetup();

@@ -1,6 +1,7 @@
 import { CharacterAvatar } from '@/components/game/CharacterAvatar';
 import { QuestCard } from '@/components/game/QuestCard';
 import { StatsPanel } from '@/components/game/StatsPanel';
+import { QuickLogModal } from '@/components/health/QuickLogModal';
 import { gameConfig } from '@/constants/gameConfig';
 import { theme } from '@/constants/theme';
 import { checkAchievements, initializeGame, updateQuestProgress } from '@/services/gamificationEngine';
@@ -8,11 +9,14 @@ import { initialAchievements, motivationalMessages } from '@/services/mockData';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DashboardScreen() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'steps' | 'water' | 'meal' | 'exercise' | 'meditation' | 'sleep'>('steps');
+  
   const user = useGameStore((state) => state.user);
   const activeQuests = useGameStore((state) => state.activeQuests);
   const achievements = useGameStore((state) => state.achievements);
@@ -69,6 +73,11 @@ export default function DashboardScreen() {
   
   const handleQuestComplete = (questId: string) => {
     completeQuest(questId);
+  };
+  
+  const openQuickLog = (type: typeof modalType) => {
+    setModalType(type);
+    setModalVisible(true);
   };
   
   return (
@@ -164,22 +173,63 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionGrid}>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('steps')}>
               <LinearGradient
                 colors={theme.colors.gradients.primary}
                 style={styles.actionGradient}
               >
-                <Text style={styles.actionIcon}>➕</Text>
-                <Text style={styles.actionText}>Log Activity</Text>
+                <Text style={styles.actionIcon}>👣</Text>
+                <Text style={styles.actionText}>Steps</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
+            
+            <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('water')}>
               <LinearGradient
-                colors={[theme.colors.quest.custom, theme.colors.primary.light]}
+                colors={[theme.colors.stats.mana, theme.colors.primary.light]}
                 style={styles.actionGradient}
               >
-                <Text style={styles.actionIcon}>📜</Text>
-                <Text style={styles.actionText}>New Quest</Text>
+                <Text style={styles.actionIcon}>💧</Text>
+                <Text style={styles.actionText}>Water</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meal')}>
+              <LinearGradient
+                colors={[theme.colors.stats.stamina, theme.colors.accent.gold]}
+                style={styles.actionGradient}
+              >
+                <Text style={styles.actionIcon}>🍽️</Text>
+                <Text style={styles.actionText}>Meal</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('exercise')}>
+              <LinearGradient
+                colors={[theme.colors.stats.hp, theme.colors.accent.legendary]}
+                style={styles.actionGradient}
+              >
+                <Text style={styles.actionIcon}>💪</Text>
+                <Text style={styles.actionText}>Exercise</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meditation')}>
+              <LinearGradient
+                colors={[theme.colors.quest.custom, theme.colors.primary.lighter]}
+                style={styles.actionGradient}
+              >
+                <Text style={styles.actionIcon}>🧘</Text>
+                <Text style={styles.actionText}>Meditate</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('sleep')}>
+              <LinearGradient
+                colors={[theme.colors.background.tertiary, theme.colors.primary.dark]}
+                style={styles.actionGradient}
+              >
+                <Text style={styles.actionIcon}>😴</Text>
+                <Text style={styles.actionText}>Sleep</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -188,6 +238,13 @@ export default function DashboardScreen() {
         {/* Bottom Padding */}
         <View style={{ height: 40 }} />
       </ScrollView>
+      
+      {/* Quick Log Modal */}
+      <QuickLogModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        type={modalType}
+      />
     </LinearGradient>
     </SafeAreaView>
   );

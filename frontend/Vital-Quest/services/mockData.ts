@@ -79,7 +79,7 @@ export const initialAchievements: Achievement[] = [
     id: 'ach_mindful_master',
     title: 'Mindful Master',
     description: 'Complete 100 minutes of meditation',
-    icon: '🕉️',
+    icon: '🧘',
     rarity: 'epic',
     category: 'mindfulness',
     unlocked: false,

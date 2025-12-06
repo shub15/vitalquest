@@ -16,16 +16,21 @@ export enum HealthConnectPermission {
  * Check if Health Connect is available on the device
  */
 export async function isHealthConnectAvailable(): Promise<boolean> {
+  console.log('[Health Connect] Checking availability...');
+  
   if (Platform.OS !== 'android') {
-    console.warn('Health Connect is only available on Android');
+    console.warn('[Health Connect] Not on Android, Health Connect unavailable');
     return false;
   }
 
   try {
     const status = await initialize();
-    return status === SdkAvailabilityStatus.SDK_AVAILABLE;
+    console.log('[Health Connect] SDK Status:', status);
+    const isAvailable = status === SdkAvailabilityStatus.SDK_AVAILABLE;
+    console.log('[Health Connect] Is Available:', isAvailable);
+    return isAvailable;
   } catch (error) {
-    console.error('Error checking Health Connect availability:', error);
+    console.error('[Health Connect] Error checking availability:', error);
     return false;
   }
 }
@@ -34,24 +39,29 @@ export async function isHealthConnectAvailable(): Promise<boolean> {
  * Request Health Connect permissions
  */
 export async function requestHealthConnectPermissions(): Promise<boolean> {
+  console.log('[Health Connect] Requesting permissions...');
+  
   if (Platform.OS !== 'android') {
+    console.warn('[Health Connect] Not on Android, skipping permissions');
     return false;
   }
 
   try {
     const permissions = [
-      { accessType: 'read', recordType: HealthConnectPermission.STEPS },
-      { accessType: 'read', recordType: HealthConnectPermission.DISTANCE },
-      { accessType: 'read', recordType: HealthConnectPermission.ACTIVE_CALORIES_BURNED },
-      { accessType: 'read', recordType: HealthConnectPermission.HEART_RATE },
-      { accessType: 'read', recordType: HealthConnectPermission.SLEEP_SESSION },
-      { accessType: 'read', recordType: HealthConnectPermission.EXERCISE_SESSION },
+      { accessType: 'read' as const, recordType: HealthConnectPermission.STEPS },
+      { accessType: 'read' as const, recordType: HealthConnectPermission.DISTANCE },
+      { accessType: 'read' as const, recordType: HealthConnectPermission.ACTIVE_CALORIES_BURNED },
+      { accessType: 'read' as const, recordType: HealthConnectPermission.HEART_RATE },
+      { accessType: 'read' as const, recordType: HealthConnectPermission.SLEEP_SESSION },
+      { accessType: 'read' as const, recordType: HealthConnectPermission.EXERCISE_SESSION },
     ];
 
-    const granted = await requestPermission(permissions);
-    return granted;
+    console.log('[Health Connect] Requesting permissions for:', permissions.map(p => p.recordType));
+    const granted = await requestPermission(permissions as any);
+    console.log('[Health Connect] Permissions granted:', granted);
+    return !!granted;
   } catch (error) {
-    console.error('Error requesting Health Connect permissions:', error);
+    console.error('[Health Connect] Error requesting permissions:', error);
     return false;
   }
 }
@@ -60,8 +70,10 @@ export async function requestHealthConnectPermissions(): Promise<boolean> {
  * Get steps data for a date range
  */
 export async function getStepsData(startDate: Date, endDate: Date): Promise<number> {
+  console.log('[Health Connect] Fetching steps data from', startDate.toISOString(), 'to', endDate.toISOString());
+  
   try {
-    const result = await readRecords(HealthConnectPermission.STEPS, {
+    const result: any = await readRecords(HealthConnectPermission.STEPS, {
       timeRangeFilter: {
         operator: 'between',
         startTime: startDate.toISOString(),
@@ -69,16 +81,21 @@ export async function getStepsData(startDate: Date, endDate: Date): Promise<numb
       },
     });
 
+    console.log('[Health Connect] Steps result:', JSON.stringify(result, null, 2));
+
     let totalSteps = 0;
-    if (result.records) {
-      result.records.forEach((record: any) => {
-        totalSteps += record.count || 0;
+    if (Array.isArray(result)) {
+      result.forEach((record: any) => {
+        const steps = record.count || 0;
+        totalSteps += steps;
+        console.log('[Health Connect] Step record:', { count: steps, time: record.time });
       });
     }
 
+    console.log('[Health Connect] Total steps:', totalSteps);
     return totalSteps;
   } catch (error) {
-    console.error('Error fetching steps data:', error);
+    console.error('[Health Connect] Error fetching steps:', error);
     return 0;
   }
 }
@@ -87,8 +104,10 @@ export async function getStepsData(startDate: Date, endDate: Date): Promise<numb
  * Get exercise sessions for a date range
  */
 export async function getExerciseSessions(startDate: Date, endDate: Date): Promise<HealthActivity[]> {
+  console.log('[Health Connect] Fetching exercise sessions from', startDate.toISOString(), 'to', endDate.toISOString());
+  
   try {
-    const result = await readRecords(HealthConnectPermission.EXERCISE_SESSION, {
+    const result: any = await readRecords(HealthConnectPermission.EXERCISE_SESSION, {
       timeRangeFilter: {
         operator: 'between',
         startTime: startDate.toISOString(),
@@ -96,30 +115,37 @@ export async function getExerciseSessions(startDate: Date, endDate: Date): Promi
       },
     });
 
+    console.log('[Health Connect] Exercise result:', JSON.stringify(result, null, 2));
+
     const activities: HealthActivity[] = [];
     
-    if (result.records) {
-      result.records.forEach((record: any) => {
+    if (Array.isArray(result)) {
+      result.forEach((record: any) => {
         const startTime = new Date(record.startTime);
         const endTime = new Date(record.endTime);
         const durationMinutes = Math.floor((endTime.getTime() - startTime.getTime()) / 60000);
 
-        activities.push({
+        const activity: HealthActivity = {
           id: record.metadata?.id || `exercise-${Date.now()}`,
           type: 'exercise',
-          category: mapExerciseType(record.exerciseType),
-          duration: durationMinutes,
-          intensity: 'moderate', // Default, can be enhanced
-          caloriesBurned: 0, // Would need to fetch from calories burned records
           date: startTime,
+          value: durationMinutes,
+          unit: 'minutes',
           source: 'health_connect',
-        });
+          metadata: {
+            duration: durationMinutes,
+          },
+        };
+
+        activities.push(activity);
+        console.log('[Health Connect] Exercise activity:', activity);
       });
     }
 
+    console.log('[Health Connect] Total exercises:', activities.length);
     return activities;
   } catch (error) {
-    console.error('Error fetching exercise sessions:', error);
+    console.error('[Health Connect] Error fetching exercises:', error);
     return [];
   }
 }
@@ -128,8 +154,10 @@ export async function getExerciseSessions(startDate: Date, endDate: Date): Promi
  * Get sleep data for a date range
  */
 export async function getSleepData(startDate: Date, endDate: Date): Promise<HealthActivity[]> {
+  console.log('[Health Connect] Fetching sleep data from', startDate.toISOString(), 'to', endDate.toISOString());
+  
   try {
-    const result = await readRecords(HealthConnectPermission.SLEEP_SESSION, {
+    const result: any = await readRecords(HealthConnectPermission.SLEEP_SESSION, {
       timeRangeFilter: {
         operator: 'between',
         startTime: startDate.toISOString(),
@@ -137,29 +165,38 @@ export async function getSleepData(startDate: Date, endDate: Date): Promise<Heal
       },
     });
 
+    console.log('[Health Connect] Sleep result:', JSON.stringify(result, null, 2));
+
     const sleepActivities: HealthActivity[] = [];
     
-    if (result.records) {
-      result.records.forEach((record: any) => {
+    if (Array.isArray(result)) {
+      result.forEach((record: any) => {
         const startTime = new Date(record.startTime);
         const endTime = new Date(record.endTime);
         const durationHours = (endTime.getTime() - startTime.getTime()) / 3600000;
 
-        sleepActivities.push({
+        const activity: HealthActivity = {
           id: record.metadata?.id || `sleep-${Date.now()}`,
           type: 'sleep',
-          category: 'sleep',
-          duration: Math.floor(durationHours * 60), // Convert to minutes
-          quality: determineSleepQuality(durationHours),
           date: startTime,
+          value: durationHours,
+          unit: 'hours',
           source: 'health_connect',
-        });
+          metadata: {
+            duration: Math.floor(durationHours * 60),
+            quality: determineSleepQuality(durationHours),
+          },
+        };
+
+        sleepActivities.push(activity);
+        console.log('[Health Connect] Sleep activity:', activity);
       });
     }
 
+    console.log('[Health Connect] Total sleep sessions:', sleepActivities.length);
     return sleepActivities;
   } catch (error) {
-    console.error('Error fetching sleep data:', error);
+    console.error('[Health Connect] Error fetching sleep:', error);
     return [];
   }
 }
@@ -168,8 +205,10 @@ export async function getSleepData(startDate: Date, endDate: Date): Promise<Heal
  * Get heart rate data for a date range
  */
 export async function getHeartRateData(startDate: Date, endDate: Date): Promise<number> {
+  console.log('[Health Connect] Fetching heart rate from', startDate.toISOString(), 'to', endDate.toISOString());
+  
   try {
-    const result = await readRecords(HealthConnectPermission.HEART_RATE, {
+    const result: any = await readRecords(HealthConnectPermission.HEART_RATE, {
       timeRangeFilter: {
         operator: 'between',
         startTime: startDate.toISOString(),
@@ -177,11 +216,13 @@ export async function getHeartRateData(startDate: Date, endDate: Date): Promise<
       },
     });
 
+    console.log('[Health Connect] Heart rate result:', JSON.stringify(result, null, 2));
+
     let totalBpm = 0;
     let count = 0;
 
-    if (result.records) {
-      result.records.forEach((record: any) => {
+    if (Array.isArray(result)) {
+      result.forEach((record: any) => {
         if (record.samples) {
           record.samples.forEach((sample: any) => {
             totalBpm += sample.beatsPerMinute || 0;
@@ -191,9 +232,11 @@ export async function getHeartRateData(startDate: Date, endDate: Date): Promise<
       });
     }
 
-    return count > 0 ? Math.round(totalBpm / count) : 0;
+    const avgBpm = count > 0 ? Math.round(totalBpm / count) : 0;
+    console.log('[Health Connect] Average heart rate:', avgBpm, 'from', count, 'samples');
+    return avgBpm;
   } catch (error) {
-    console.error('Error fetching heart rate data:', error);
+    console.error('[Health Connect] Error fetching heart rate:', error);
     return 0;
   }
 }
@@ -207,11 +250,15 @@ export async function syncTodayHealthData(): Promise<{
   sleep: HealthActivity[];
   avgHeartRate: number;
 }> {
+  console.log('[Health Connect] === SYNCING TODAY\'S DATA ===');
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
+
+  console.log('[Health Connect] Date range:', today.toISOString(), 'to', tomorrow.toISOString());
 
   const [steps, exercises, sleep, avgHeartRate] = await Promise.all([
     getStepsData(today, tomorrow),
@@ -220,12 +267,22 @@ export async function syncTodayHealthData(): Promise<{
     getHeartRateData(today, tomorrow),
   ]);
 
-  return {
+  const result = {
     steps,
     exercises,
     sleep,
     avgHeartRate,
   };
+
+  console.log('[Health Connect] === SYNC COMPLETE ===');
+  console.log('[Health Connect] Summary:', {
+    steps,
+    exerciseCount: exercises.length,
+    sleepCount: sleep.length,
+    avgHeartRate,
+  });
+
+  return result;
 }
 
 /**
@@ -237,6 +294,9 @@ export async function syncHealthDataRange(startDate: Date, endDate: Date): Promi
   sleep: HealthActivity[];
   avgHeartRate: number;
 }> {
+  console.log('[Health Connect] === SYNCING DATE RANGE ===');
+  console.log('[Health Connect] From:', startDate.toISOString(), 'To:', endDate.toISOString());
+
   const [steps, exercises, sleep, avgHeartRate] = await Promise.all([
     getStepsData(startDate, endDate),
     getExerciseSessions(startDate, endDate),
@@ -244,12 +304,22 @@ export async function syncHealthDataRange(startDate: Date, endDate: Date): Promi
     getHeartRateData(startDate, endDate),
   ]);
 
-  return {
+  const result = {
     steps,
     exercises,
     sleep,
     avgHeartRate,
   };
+
+  console.log('[Health Connect] === RANGE SYNC COMPLETE ===');
+  console.log('[Health Connect] Summary:', {
+    steps,
+    exerciseCount: exercises.length,
+    sleepCount: sleep.length,
+    avgHeartRate,
+  });
+
+  return result;
 }
 
 /**
@@ -285,20 +355,22 @@ function determineSleepQuality(durationHours: number): 'poor' | 'fair' | 'good' 
  * Initialize Health Connect and request permissions
  */
 export async function initializeHealthConnect(): Promise<boolean> {
+  console.log('[Health Connect] === INITIALIZING ===');
+  
   const isAvailable = await isHealthConnectAvailable();
   
   if (!isAvailable) {
-    console.warn('Health Connect is not available on this device');
+    console.warn('[Health Connect] Not available on this device');
     return false;
   }
 
   const hasPermissions = await requestHealthConnectPermissions();
   
   if (!hasPermissions) {
-    console.warn('Health Connect permissions not granted');
+    console.warn('[Health Connect] Permissions not granted');
     return false;
   }
 
-  console.log('Health Connect initialized successfully');
+  console.log('[Health Connect] === INITIALIZATION COMPLETE ===');
   return true;
 }

@@ -1,8 +1,8 @@
 import { calculateXpForActivity } from '@/services/gamificationEngine';
 import {
-    initializeHealthConnect,
-    isHealthConnectAvailable,
-    syncTodayHealthData,
+  initializeHealthConnect,
+  isHealthConnectAvailable,
+  syncTodayHealthData,
 } from '@/services/healthConnect';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
@@ -26,37 +26,47 @@ export function useHealthConnectSync() {
   }, []);
 
   const checkAvailability = async () => {
+    console.log('[useHealthConnectSync] Checking availability...');
     try {
       const available = await isHealthConnectAvailable();
+      console.log('[useHealthConnectSync] Availability result:', available);
       setIsAvailable(available);
     } catch (err) {
-      console.error('Error checking Health Connect availability:', err);
+      console.error('[useHealthConnectSync] Error checking availability:', err);
       setError('Failed to check Health Connect availability');
     }
   };
 
   const initialize = async (): Promise<boolean> => {
+    console.log('[useHealthConnectSync] Initializing...');
     try {
       setError(null);
       const success = await initializeHealthConnect();
+      console.log('[useHealthConnectSync] Initialization result:', success);
       setIsInitialized(success);
       
       if (!success) {
-        setError('Failed to initialize Health Connect. Please check permissions.');
+        const errorMsg = 'Failed to initialize Health Connect. Please check permissions.';
+        console.warn('[useHealthConnectSync]', errorMsg);
+        setError(errorMsg);
       }
       
       return success;
     } catch (err) {
-      console.error('Error initializing Health Connect:', err);
+      console.error('[useHealthConnectSync] Error initializing:', err);
       setError('Failed to initialize Health Connect');
       return false;
     }
   };
 
   const syncData = async (): Promise<boolean> => {
+    console.log('[useHealthConnectSync] === STARTING SYNC ===');
+    
     if (!isInitialized) {
+      console.log('[useHealthConnectSync] Not initialized, initializing now...');
       const initialized = await initialize();
       if (!initialized) {
+        console.error('[useHealthConnectSync] Initialization failed, aborting sync');
         return false;
       }
     }
@@ -64,15 +74,18 @@ export function useHealthConnectSync() {
     try {
       setSyncStatus(true);
       setError(null);
+      console.log('[useHealthConnectSync] Fetching today\'s health data...');
 
       // Fetch today's health data
       const healthData = await syncTodayHealthData();
+      console.log('[useHealthConnectSync] Received health data:', healthData);
 
       // Convert Health Connect data to our HealthActivity format
       const activities: Omit<HealthActivity, 'id'>[] = [];
 
       // Add steps
       if (healthData.steps > 0) {
+        console.log('[useHealthConnectSync] Adding steps activity:', healthData.steps);
         activities.push({
           type: 'steps',
           date: new Date(),
@@ -83,25 +96,27 @@ export function useHealthConnectSync() {
       }
 
       // Add exercises
+      console.log('[useHealthConnectSync] Processing', healthData.exercises.length, 'exercises');
       healthData.exercises.forEach((exercise) => {
+        const duration = exercise.metadata?.duration || 0;
+        console.log('[useHealthConnectSync] Exercise:', { duration, date: exercise.date });
         activities.push({
           type: 'exercise',
           date: exercise.date,
-          value: exercise.duration || 0,
+          value: duration,
           unit: 'minutes',
           source: 'health_connect',
           metadata: {
-            duration: exercise.duration,
-            category: exercise.category,
-            intensity: exercise.intensity,
-            caloriesBurned: exercise.caloriesBurned,
+            duration,
           },
         });
       });
 
       // Add sleep
+      console.log('[useHealthConnectSync] Processing', healthData.sleep.length, 'sleep sessions');
       healthData.sleep.forEach((sleep) => {
-        const sleepHours = (sleep.duration || 0) / 60; // Convert minutes to hours
+        const sleepHours = sleep.value || 0;
+        console.log('[useHealthConnectSync] Sleep:', { hours: sleepHours, date: sleep.date });
         activities.push({
           type: 'sleep',
           date: sleep.date,
@@ -109,14 +124,15 @@ export function useHealthConnectSync() {
           unit: 'hours',
           source: 'health_connect',
           metadata: {
-            duration: sleep.duration,
-            quality: sleep.quality,
+            duration: sleep.metadata?.duration,
+            quality: sleep.metadata?.quality,
           },
         });
       });
 
       // Import all activities into health store
       if (activities.length > 0) {
+        console.log('[useHealthConnectSync] Importing', activities.length, 'activities');
         importHealthData(activities);
 
         // Award XP for synced activities
@@ -125,30 +141,41 @@ export function useHealthConnectSync() {
 
           // Calculate XP for steps
           if (healthData.steps > 0) {
-            totalXp += calculateXpForActivity('steps', healthData.steps);
+            const stepsXp = calculateXpForActivity('steps', healthData.steps);
+            console.log('[useHealthConnectSync] Steps XP:', stepsXp);
+            totalXp += stepsXp;
           }
 
           // Calculate XP for exercises
           healthData.exercises.forEach((exercise) => {
-            totalXp += calculateXpForActivity('exercise', exercise.duration || 0);
+            const duration = exercise.metadata?.duration || 0;
+            const exerciseXp = calculateXpForActivity('exercise', duration);
+            console.log('[useHealthConnectSync] Exercise XP:', exerciseXp);
+            totalXp += exerciseXp;
           });
 
           // Calculate XP for sleep
           healthData.sleep.forEach((sleep) => {
-            const sleepHours = (sleep.duration || 0) / 60;
-            totalXp += calculateXpForActivity('sleep', sleepHours);
+            const sleepHours = sleep.value || 0;
+            const sleepXp = calculateXpForActivity('sleep', sleepHours);
+            console.log('[useHealthConnectSync] Sleep XP:', sleepXp);
+            totalXp += sleepXp;
           });
 
           if (totalXp > 0) {
+            console.log('[useHealthConnectSync] Awarding total XP:', totalXp);
             addXp(totalXp);
           }
         }
+      } else {
+        console.log('[useHealthConnectSync] No activities to import');
       }
 
       setSyncStatus(false);
+      console.log('[useHealthConnectSync] === SYNC COMPLETE ===');
       return true;
     } catch (err) {
-      console.error('Error syncing Health Connect data:', err);
+      console.error('[useHealthConnectSync] Error syncing:', err);
       setError('Failed to sync health data');
       setSyncStatus(false);
       return false;

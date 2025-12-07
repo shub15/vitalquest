@@ -1,6 +1,5 @@
-import { theme } from '@/constants/theme';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,6 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { AvatarProgressionModal } from './AvatarProgressionModal';
 
 // --- Retro Palette ---
 const PALETTE = {
@@ -20,18 +20,70 @@ const PALETTE = {
     apprentice: '#4ade80', // Green
     adept: '#22d3ee',      // Cyan
     expert: '#c084fc',     // Purple
-    legend: '#fbbf24',     // Gold
+    master: '#fbbf24',     // Gold
+    grandmaster: '#f97316', // Orange
+    legend: '#ef4444',     // Red
+    mythic: '#a855f7',     // Purple/Violet
   }
+};
+
+// Character class type
+export type CharacterClass = 'warrior' | 'assassin' | 'monk' | 'villager';
+
+// All character class avatar images (8 progression stages each)
+const CLASS_AVATARS = {
+  warrior: {
+    1: require('@/assets/images/avatar/class 1/class 1_1.jpeg'),
+    2: require('@/assets/images/avatar/class 1/class 1_2.jpeg'),
+    3: require('@/assets/images/avatar/class 1/class 1_3.jpeg'),
+    4: require('@/assets/images/avatar/class 1/class 1_4.jpeg'),
+    5: require('@/assets/images/avatar/class 1/class 1_5.jpeg'),
+    6: require('@/assets/images/avatar/class 1/class 1_6.jpeg'),
+    7: require('@/assets/images/avatar/class 1/class 1_7.jpeg'),
+    8: require('@/assets/images/avatar/class 1/class 1_8.jpeg'),
+  },
+  assassin: {
+    1: require('@/assets/images/avatar/class 2/class 2_1.jpeg'),
+    2: require('@/assets/images/avatar/class 2/class 2_2.jpeg'),
+    3: require('@/assets/images/avatar/class 2/class 2_3.jpeg'),
+    4: require('@/assets/images/avatar/class 2/class 2_4.jpeg'),
+    5: require('@/assets/images/avatar/class 2/class 2_5.jpeg'),
+    6: require('@/assets/images/avatar/class 2/class 2_6.jpeg'),
+    7: require('@/assets/images/avatar/class 2/class 2_7.jpeg'),
+    8: require('@/assets/images/avatar/class 2/class 2_8.jpeg'),
+  },
+  monk: {
+    1: require('@/assets/images/avatar/class 3/class 3_1.jpeg'),
+    2: require('@/assets/images/avatar/class 3/class 3_2.jpeg'),
+    3: require('@/assets/images/avatar/class 3/class 3_3.jpeg'),
+    4: require('@/assets/images/avatar/class 3/class 3_4.jpeg'),
+    5: require('@/assets/images/avatar/class 3/class 3_5.jpeg'),
+    6: require('@/assets/images/avatar/class 3/class 3_6.jpeg'),
+    7: require('@/assets/images/avatar/class 3/class 3_7.jpeg'),
+    8: require('@/assets/images/avatar/class 3/class 3_8.jpeg'),
+  },
+  villager: {
+    1: require('@/assets/images/avatar/class 4/class 4_1.jpeg'),
+    2: require('@/assets/images/avatar/class 4/class 4_2.jpeg'),
+    3: require('@/assets/images/avatar/class 4/class 4_3.jpeg'),
+    4: require('@/assets/images/avatar/class 4/class 4_4.jpeg'),
+    5: require('@/assets/images/avatar/class 4/class 4_5.jpeg'),
+    6: require('@/assets/images/avatar/class 4/class 4_6.jpeg'),
+    7: require('@/assets/images/avatar/class 4/class 4_7.jpeg'),
+    8: require('@/assets/images/avatar/class 4/class 4_8.jpeg'),
+  },
 };
 
 interface CharacterAvatarProps {
   level: number;
   size?: number;
+  characterClass?: CharacterClass; // Optional, defaults to warrior
 }
 
-export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 120 }) => {
+export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 120, characterClass = 'warrior' }) => {
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
+  const [showProgressionModal, setShowProgressionModal] = useState(false);
   
   // Idle breathing animation (Hologram drift)
   React.useEffect(() => {
@@ -54,28 +106,40 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 
   
   // Determine color based on level tier
   const getRankColor = () => {
-    if (level >= 25) return PALETTE.ranks.legend;
-    if (level >= 20) return PALETTE.ranks.expert;
-    if (level >= 10) return PALETTE.ranks.adept;
-    if (level >= 5) return PALETTE.ranks.apprentice;
+    if (level >= 36) return PALETTE.ranks.mythic;
+    if (level >= 31) return PALETTE.ranks.legend;
+    if (level >= 26) return PALETTE.ranks.grandmaster;
+    if (level >= 21) return PALETTE.ranks.master;
+    if (level >= 16) return PALETTE.ranks.expert;
+    if (level >= 11) return PALETTE.ranks.adept;
+    if (level >= 6) return PALETTE.ranks.apprentice;
     return PALETTE.ranks.novice;
   };
 
-  const getAvatarEmoji = () => {
-    if (level >= 25) return '👑';
-    if (level >= 20) return '🦸';
-    if (level >= 15) return '🧙';
-    if (level >= 10) return '⚔️';
-    if (level >= 5) return '🛡️';
-    return '🎯';
+  // Map level to avatar image stage (1-8)
+  const getAvatarStage = (): number => {
+    if (level >= 36) return 8;
+    if (level >= 31) return 7;
+    if (level >= 26) return 6;
+    if (level >= 21) return 5;
+    if (level >= 16) return 4;
+    if (level >= 11) return 3;
+    if (level >= 6) return 2;
+    return 1;
   };
 
   const rankColor = getRankColor();
+  const avatarStage = getAvatarStage();
+  const avatarImage = CLASS_AVATARS[characterClass][avatarStage as keyof typeof CLASS_AVATARS.warrior];
   
   return (
-    <View style={[
-      styles.container, 
-      { width: size, height: size, borderColor: rankColor }
+    <>
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => setShowProgressionModal(true)}
+        style={[
+          styles.container, 
+          { width: size, height: size, borderColor: rankColor }
     ]}>
       
       {/* Background "Screen" */}
@@ -83,9 +147,11 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 
         
         {/* The Avatar */}
         <Animated.View style={[styles.avatarContainer, animatedStyle]}>
-          <Text style={[styles.avatar, { fontSize: size * 0.5 }]}>
-            {getAvatarEmoji()}
-          </Text>
+          <Image
+            source={avatarImage}
+            style={[styles.avatarImage, { width: size - 16, height: size - 16 }]}
+            resizeMode="cover"
+          />
         </Animated.View>
 
         {/* CRT Scanline Effect */}
@@ -97,13 +163,22 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 
       <View style={[styles.levelTag, { backgroundColor: rankColor }]}>
         <Text style={[
           styles.levelText, 
-          { color: level >= 25 ? '#000' : '#1e293b' }
+          { color: level >= 21 ? '#000' : '#1e293b' }
         ]}>
           LVL.{level}
         </Text>
       </View>
 
-    </View>
+      </TouchableOpacity>
+
+      {/* Progression Modal */}
+      <AvatarProgressionModal
+        visible={showProgressionModal}
+        onClose={() => setShowProgressionModal(false)}
+        currentLevel={level}
+        characterClass={characterClass}
+      />
+    </>
   );
 };
 
@@ -132,6 +207,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 2,
+  },
+  avatarImage: {
+    borderRadius: 4,
   },
   avatar: {
     textAlign: 'center',

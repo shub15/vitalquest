@@ -212,3 +212,127 @@ export const generateMockLeaderboard = (currentUserId: string, currentUserXp: nu
   // Otherwise, add user entry at the end
   return [...entries, currentUserEntry];
 };
+
+// Activity Post interface
+export interface ActivityPost {
+  id: string;
+  userId: string;
+  username: string;
+  userLevel: number;
+  avatarColor: string;
+  timestamp: Date;
+  message?: string;
+  stats: {
+    steps?: number;
+    exerciseMinutes?: number;
+    waterGlasses?: number;
+    achievementUnlocked?: string;
+    streakDays?: number;
+  };
+  likes: number;
+  likedByUser?: boolean;
+}
+
+// Mock activity posts
+export const mockActivityPosts: ActivityPost[] = [
+  {
+    id: 'post-1',
+    userId: 'friend-1',
+    username: 'FitWarrior92',
+    userLevel: 12,
+    avatarColor: '#FF6B35',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+    message: 'Crushed my morning workout! Feeling unstoppable today! 💪',
+    stats: {
+      steps: 8543,
+      exerciseMinutes: 45,
+      waterGlasses: 7,
+      streakDays: 15,
+    },
+    likes: 24,
+    likedByUser: false,
+  },
+  {
+    id: 'post-2',
+    userId: 'friend-2',
+    username: 'HealthMaster',
+    userLevel: 18,
+    avatarColor: '#10B981',
+    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
+    message: '30 day streak unlocked! Health Connect integration is amazing!',
+    stats: {
+      achievementUnlocked: '30 DAY WARRIOR',
+      streakDays: 30,
+      steps: 12450,
+    },
+    likes: 45,
+    likedByUser: true,
+  },
+  {
+    id: 'post-3',
+    userId: 'friend-3',
+    username: 'YogaQueen',
+    userLevel: 10,
+    avatarColor: '#8B5CF6',
+    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
+    message: 'Morning meditation session complete. Inner peace unlocked! 🧘‍♀️',
+    stats: {
+      steps: 5200,
+      exerciseMinutes: 30,
+      waterGlasses: 6,
+    },
+    likes: 18,
+    likedByUser: false,
+  },
+  {
+    id: 'post-4',
+    userId: 'friend-5',
+    username: 'GymBeast',
+    userLevel: 20,
+    avatarColor: '#EF4444',
+    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
+    message: 'New personal record! Beast mode activated! 🔥',
+    stats: {
+      steps: 15789,
+      exerciseMinutes: 90,
+      waterGlasses: 8,
+      achievementUnlocked: 'WORKOUT LEGEND',
+      streakDays: 45,
+    },
+    likes: 67,
+    likedByUser: true,
+  },
+  {
+    id: 'post-5',
+    userId: 'friend-4',
+    username: 'RunnerPro',
+    userLevel: 15,
+    avatarColor: '#3B82F6',
+    timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000), // 18 hours ago
+    message: 'Half marathon training day 22. Legs are sore but spirit is strong! 🏃‍♂️',
+    stats: {
+      steps: 21543,
+      exerciseMinutes: 120,
+      waterGlasses: 8,
+      streakDays: 22,
+    },
+    likes: 32,
+    likedByUser: false,
+  },
+  {
+    id: 'post-6',
+    userId: 'user-top1',
+    username: 'HealthLegend',
+    userLevel: 25,
+    avatarColor: '#FFD700',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+    message: 'Level 25 achieved! The grind never stops!',
+    stats: {
+      achievementUnlocked: 'HEALTH LEGEND',
+      steps: 18000,
+      exerciseMinutes: 75,
+    },
+    likes: 89,
+    likedByUser: false,
+  },
+];

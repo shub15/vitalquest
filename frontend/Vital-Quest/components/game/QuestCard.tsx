@@ -1,4 +1,3 @@
-import { theme } from '@/constants/theme';
 import { Quest } from '@/types';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
@@ -74,6 +73,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
   const scale = useSharedValue(1);
   const checkScale = useSharedValue(0);
   const [localCompleted, setLocalCompleted] = React.useState(quest.completed);
+  const [hideCheckbox, setHideCheckbox] = React.useState(quest.completed);
   
   const progress = quest.progress / quest.target;
   const isComplete = progress >= 1 || localCompleted;
@@ -103,6 +103,8 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
       withSpring(1, { damping: 12 })
     );
     if (onComplete) setTimeout(() => onComplete(), 300);
+    // Hide checkbox after animation completes
+    setTimeout(() => setHideCheckbox(true), 800);
   };
   
   const getDifficultyColor = () => {
@@ -157,20 +159,22 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
           </View>
           
           {/* Dark Slot Checkbox */}
-          <Pressable
-            style={[
-              styles.checkbox, 
-              isComplete && { backgroundColor: PALETTE.neon.green, borderColor: PALETTE.neon.green }
-            ]}
-            onPress={handleComplete}
-            disabled={isComplete}
-          >
-            {isComplete && (
-              <Animated.View style={checkAnimatedStyle}>
-                <MaterialCommunityIcons name="skull" size={18} color="#022c22" />
-              </Animated.View>
-            )}
-          </Pressable>
+          {!hideCheckbox && (
+            <Pressable
+              style={[
+                styles.checkbox, 
+                isComplete && { backgroundColor: PALETTE.neon.green, borderColor: PALETTE.neon.green }
+              ]}
+              onPress={handleComplete}
+              disabled={isComplete}
+            >
+              {isComplete && (
+                <Animated.View style={checkAnimatedStyle}>
+                  <MaterialCommunityIcons name="skull" size={18} color="#022c22" />
+                </Animated.View>
+              )}
+            </Pressable>
+          )}
         </View>
         
         <Text style={styles.description} numberOfLines={2}>

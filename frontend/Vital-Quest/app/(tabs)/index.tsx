@@ -5,7 +5,6 @@ import { QuickLogModal } from '@/components/health/QuickLogModal';
 import { gameConfig } from '@/constants/gameConfig';
 import { theme } from '@/constants/theme';
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
-import AICoach from '@/services/aiCoach';
 import { checkAchievements, initializeGame, updateQuestProgress } from '@/services/gamificationEngine';
 import { initialAchievements } from '@/services/mockData';
 import { useGameStore } from '@/store/gameStore';
@@ -15,13 +14,32 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// --- Cyberpunk / Retro Palette ---
+const PALETTE = {
+  bg: '#0f172a',           // Deepest Slate (Screen Background)
+  surface: '#1e293b',      // Slate 800 (Panels)
+  surfaceHighlight: '#334155', // Slate 700 (Button Hover/Borders)
+  slot: '#020617',         // Black/Void (Data inputs)
+  text: '#f8fafc',         // White-ish
+  textDim: '#64748b',      // Dimmed text
+  accent: {
+    cyan: '#22d3ee',
+    green: '#4ade80',
+    purple: '#c084fc',
+    gold: '#fbbf24',
+    red: '#f87171'
+  }
+};
+
+const RETRO_RADIUS = 4;
+const RETRO_BORDER_WIDTH = 2;
+
 export default function DashboardScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'steps' | 'water' | 'meal' | 'exercise' | 'meditation' | 'sleep'>('steps');
 
   const user = useGameStore((state) => state.user);
   const activeQuests = useGameStore((state) => state.activeQuests);
-  const achievements = useGameStore((state) => state.achievements);
   const initializeUser = useGameStore((state) => state.initializeUser);
   const completeQuest = useGameStore((state) => state.completeQuest);
 
@@ -34,46 +52,34 @@ export default function DashboardScreen() {
   const handleSync = async () => {
     const success = await syncData();
     if (success) {
-      Alert.alert('Sync Complete', 'Your health data has been synchronized.');
+      Alert.alert('SYSTEM SYNC', 'Bio-metrics updated successfully.');
     } else {
-      Alert.alert('Sync Failed', 'Failed to sync health data. Please check permissions.');
+      Alert.alert('SYNC ERROR', 'Connection to health mainframe failed.');
     }
   };
 
   const handleSyncLastWeek = async () => {
-    // Sync last 7 days of data
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
-    
-    console.log('[Dashboard] Syncing last 7 days:', startDate, 'to', endDate);
     const success = await syncDataRange(startDate, endDate);
-    
-    if (success) {
-      Alert.alert('Historical Sync Complete', 'Last 7 days of health data synchronized.');
-    } else {
-      Alert.alert('Sync Failed', 'Failed to sync historical data.');
-    }
+    if (success) Alert.alert('ARCHIVE SYNC', 'Historical data retrieved.');
+    else Alert.alert('SYNC ERROR', 'Archive retrieval failed.');
   };
 
   useEffect(() => {
     if (!user) {
       initializeUser('HealthHero');
-
-      // Initialize achievements
       const gameStore = useGameStore.getState();
       initialAchievements.forEach((achievement) => {
         if (!gameStore.achievements.find((a) => a.id === achievement.id)) {
           gameStore.achievements.push(achievement);
         }
       });
-
-      // Initialize quests
       initializeGame();
     }
   }, [user, initializeUser]);
 
-  // Update quest progress when health data changes
   useEffect(() => {
     if (user) {
       updateQuestProgress();
@@ -84,7 +90,8 @@ export default function DashboardScreen() {
   if (!user) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Initializing your adventure...</Text>
+        <ActivityIndicator size="large" color={PALETTE.accent.cyan} />
+        <Text style={styles.loadingText}>INITIALIZING SYSTEM...</Text>
       </View>
     );
   }
@@ -95,13 +102,9 @@ export default function DashboardScreen() {
 
   const currentXp = user.character.totalXp - gameConfig.levels.xpThresholds[user.character.level - 1];
   const xpNeeded = xpForNextLevel - gameConfig.levels.xpThresholds[user.character.level - 1];
-
   const dailyQuests = activeQuests.filter((q) => q.type === 'daily').slice(0, 3);
 
-
-  const handleQuestComplete = (questId: string) => {
-    completeQuest(questId);
-  };
+  const handleQuestComplete = (questId: string) => completeQuest(questId);
 
   const openQuickLog = (type: typeof modalType) => {
     setModalType(type);
@@ -116,16 +119,22 @@ export default function DashboardScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
+          {/* --- Header / Identity Card --- */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <Text style={styles.greeting}>Welcome back,</Text>
-              <Text style={styles.username}>{user.username}!</Text>
+              <Text style={styles.greeting}>SYSTEM ONLINE</Text>
+              <Text style={styles.username}>{user.username}</Text>
+              <View style={styles.onlineBadge}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.onlineText}>CONNECTED</Text>
+              </View>
             </View>
-            <CharacterAvatar level={user.character.level} size={80} />
+            <View style={styles.avatarContainer}>
+              <CharacterAvatar level={user.character.level} size={70} />
+            </View>
           </View>
 
-          {/* Stats Panel */}
+          {/* --- Main Stats Panel --- */}
           <StatsPanel
             level={user.character.level}
             currentXp={currentXp}
@@ -137,101 +146,77 @@ export default function DashboardScreen() {
             streak={user.stats.currentStreak}
           />
 
-
-
-          {/* Today's Health Summary */}
-          <View style={[styles.section,{paddingTop: theme.spacing.md}]}>
+          {/* --- Data Modules (Health) --- */}
+          <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Today's Progress</Text>
+              <Text style={styles.sectionTitle}>BIO-METRICS</Text>
+              
+              {/* Retro Sync Buttons */}
               <View style={styles.syncButtons}>
                 <TouchableOpacity
-                  style={[styles.syncButton, styles.syncButtonSmall]}
+                  style={[styles.retroButton, styles.retroButtonSmall]}
                   onPress={handleSyncLastWeek}
                   disabled={isSyncing}
                 >
-                  <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-                    <MaterialCommunityIcons name="calendar-week" size={14} color={theme.colors.primary.light} />
-                    <Text style={styles.syncButtonTextSmall}>Week</Text>
-                  </View>
+                  <MaterialCommunityIcons name="history" size={14} color={PALETTE.textDim} />
                 </TouchableOpacity>
+                
                 <TouchableOpacity
-                  style={styles.syncButton}
+                  style={styles.retroButton}
                   onPress={handleSync}
                   disabled={isSyncing}
                 >
                   {isSyncing ? (
-                    <ActivityIndicator size="small" color={theme.colors.primary.light} />
+                    <ActivityIndicator size="small" color={PALETTE.accent.cyan} />
                   ) : (
-                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-                      <MaterialCommunityIcons name="sync" size={14} color={theme.colors.primary.light} />
-                      <Text style={styles.syncButtonText}>Sync</Text>
+                    <View style={styles.btnContent}>
+                      <MaterialCommunityIcons name="refresh" size={14} color={PALETTE.accent.cyan} />
+                      <Text style={styles.btnText}>SYNC</Text>
                     </View>
                   )}
                 </TouchableOpacity>
               </View>
             </View>
+
             <View style={styles.healthGrid}>
-              <View style={styles.healthCard}>
-                <MaterialCommunityIcons name="shoe-print" size={32} color={theme.colors.stats.xp} style={styles.healthIcon} />
-                <Text style={styles.healthValue}>{todaySteps.toLocaleString()}</Text>
-                <Text style={styles.healthLabel}>Steps</Text>
+              {/* Steps Module */}
+              <View style={[styles.dataModule, { borderColor: PALETTE.accent.cyan }]}>
+                <View style={styles.moduleHeader}>
+                  <MaterialCommunityIcons name="shoe-print" size={16} color={PALETTE.accent.cyan} />
+                  <Text style={[styles.moduleLabel, { color: PALETTE.accent.cyan }]}>STEPS</Text>
+                </View>
+                <Text style={styles.moduleValue}>{todaySteps.toLocaleString()}</Text>
               </View>
-              <View style={styles.healthCard}>
-                <MaterialCommunityIcons name="dumbbell" size={32} color={theme.colors.stats.hp} style={styles.healthIcon} />
-                <Text style={styles.healthValue}>{todayExerciseMinutes}</Text>
-                <Text style={styles.healthLabel}>Exercise (min)</Text>
+
+              {/* Exercise Module */}
+              <View style={[styles.dataModule, { borderColor: PALETTE.accent.purple }]}>
+                <View style={styles.moduleHeader}>
+                  <MaterialCommunityIcons name="dumbbell" size={16} color={PALETTE.accent.purple} />
+                  <Text style={[styles.moduleLabel, { color: PALETTE.accent.purple }]}>ACT</Text>
+                </View>
+                <Text style={styles.moduleValue}>{todayExerciseMinutes}<Text style={styles.unit}>m</Text></Text>
               </View>
-              <View style={styles.healthCard}>
-                <MaterialCommunityIcons name="water" size={32} color={theme.colors.stats.mana} style={styles.healthIcon} />
-                <Text style={styles.healthValue}>{todayWaterGlasses}/8</Text>
-                <Text style={styles.healthLabel}>Water</Text>
+
+              {/* Water Module */}
+              <View style={[styles.dataModule, { borderColor: PALETTE.accent.green }]}>
+                <View style={styles.moduleHeader}>
+                  <MaterialCommunityIcons name="cup-water" size={16} color={PALETTE.accent.green} />
+                  <Text style={[styles.moduleLabel, { color: PALETTE.accent.green }]}>H2O</Text>
+                </View>
+                <Text style={styles.moduleValue}>{todayWaterGlasses}<Text style={styles.unit}>/8</Text></Text>
               </View>
             </View>
           </View>
 
-
-
-          {/* AI Coach Recommendations */}
-          {/* <View style={styles.section}>
-            <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: theme.spacing.md}}>
-              <MaterialCommunityIcons name="robot" size={24} color={theme.colors.text.primary} style={{marginRight: 8}} />
-              <Text style={styles.sectionTitle}>AI Coach</Text>
-            </View>
-            <View style={styles.coachRecommendations}>
-              {AICoach.getRecommendations().slice(0, 3).map((rec) => (
-                <View key={rec.id} style={styles.recommendationCard}>
-                  <MaterialCommunityIcons name={rec.icon as any} size={28} color={theme.colors.primary.light} style={styles.recIcon} />
-                  <View style={styles.recContent}>
-                    <Text style={styles.recTitle}>{rec.title}</Text>
-                    <Text style={styles.recMessage}>{rec.message}</Text>
-                  </View>
-                  <View style={[
-                    styles.priorityBadge,
-                    rec.priority === 'high' && styles.highPriority,
-                    rec.priority === 'medium' && styles.mediumPriority,
-                  ]}>
-                    <MaterialCommunityIcons 
-                      name={rec.priority === 'high' ? 'alert' : rec.priority === 'medium' ? 'circle-small' : 'check'} 
-                      size={16} 
-                      color={theme.colors.text.primary} 
-                    />
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View> */}
-
-          {/* Daily Quests */}
+          {/* --- Active Missions --- */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Daily Quests</Text>
+              <Text style={styles.sectionTitle}>ACTIVE MISSIONS</Text>
               <TouchableOpacity>
-                <View style={{flexDirection: 'row', alignItems: 'center', gap: 4}}>
-                  <Text style={styles.seeAll}>See All</Text>
-                  <MaterialCommunityIcons name="chevron-right" size={16} color={theme.colors.primary.light} />
-                </View>
+                <Text style={styles.seeAll}>VIEW ALL &gt;</Text>
               </TouchableOpacity>
             </View>
+            
             {dailyQuests.length > 0 ? (
               dailyQuests.map((quest) => (
                 <QuestCard
@@ -241,64 +226,27 @@ export default function DashboardScreen() {
                 />
               ))
             ) : (
-              <View style={{alignItems: 'center', padding: theme.spacing.xl}}>
-                <Text style={styles.emptyText}>No active quests. Great job!</Text>
-                <MaterialCommunityIcons name="party-popper" size={24} color={theme.colors.text.tertiary} />
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyText}>ALL OBJECTIVES CLEARED</Text>
               </View>
             )}
           </View>
 
-          {/* Quick Actions */}
+          {/* --- Control Panel (Quick Actions) --- */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, {paddingBottom: theme.spacing.md}]}>Quick Actions</Text>
+            <Text style={[styles.sectionTitle, { marginBottom: 12 }]}>CONTROL PANEL</Text>
             <View style={styles.actionGrid}>
-              <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('steps')}>
-                <View style={styles.actionContent}>
-                  <MaterialCommunityIcons name="shoe-print" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
-                  <Text style={styles.actionText}>Steps</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('water')}>
-                <View style={styles.actionContent}>
-                  <MaterialCommunityIcons name="water" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
-                  <Text style={styles.actionText}>Water</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meal')}>
-                <View style={styles.actionContent}>
-                  <MaterialCommunityIcons name="food-apple" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
-                  <Text style={styles.actionText}>Meal</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('exercise')}>
-                <View style={styles.actionContent}>
-                  <MaterialCommunityIcons name="dumbbell" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
-                  <Text style={styles.actionText}>Exercise</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('meditation')}>
-                <View style={styles.actionContent}>
-                  <MaterialCommunityIcons name="meditation" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
-                  <Text style={styles.actionText}>Meditate</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.actionButton} onPress={() => openQuickLog('sleep')}>
-                <View style={styles.actionContent}>
-                  <MaterialCommunityIcons name="bed" size={32} color={theme.colors.text.primary} style={styles.actionIcon} />
-                  <Text style={styles.actionText}>Sleep</Text>
-                </View>
-              </TouchableOpacity>
+              <QuickActionButton icon="shoe-print" label="STEPS" color={PALETTE.accent.cyan} onPress={() => openQuickLog('steps')} />
+              <QuickActionButton icon="water" label="WATER" color={PALETTE.accent.green} onPress={() => openQuickLog('water')} />
+              <QuickActionButton icon="food-apple" label="RATIONS" color={PALETTE.accent.gold} onPress={() => openQuickLog('meal')} />
+              <QuickActionButton icon="dumbbell" label="TRAIN" color={PALETTE.accent.purple} onPress={() => openQuickLog('exercise')} />
+              <QuickActionButton icon="meditation" label="MIND" color={PALETTE.accent.cyan} onPress={() => openQuickLog('meditation')} />
+              <QuickActionButton icon="bed" label="REST" color={PALETTE.text} onPress={() => openQuickLog('sleep')} />
             </View>
           </View>
 
         </ScrollView>
 
-        {/* Quick Log Modal */}
         <QuickLogModal
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
@@ -309,203 +257,221 @@ export default function DashboardScreen() {
   );
 }
 
+// Helper for the grid buttons
+const QuickActionButton = ({ icon, label, color, onPress }: any) => (
+  <TouchableOpacity style={styles.controlKey} onPress={onPress}>
+    <View style={styles.keyInner}>
+      <MaterialCommunityIcons name={icon} size={24} color={color} />
+      <Text style={[styles.keyLabel, { color: color }]}>{label}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: PALETTE.bg,
   },
   container: {
     flex: 1,
+    backgroundColor: PALETTE.bg,
   },
   loadingContainer: {
     flex: 1,
+    backgroundColor: PALETTE.bg,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.primary,
   },
   loadingText: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.secondary,
+    marginTop: 16,
+    color: PALETTE.accent.cyan,
+    fontFamily: 'monospace',
+    letterSpacing: 2,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: theme.spacing.md,
+    padding: 16,
+    paddingBottom: 40,
   },
+  
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.lg,
+    alignItems: 'flex-start',
+    marginBottom: 24,
   },
   headerLeft: {
     flex: 1,
   },
   greeting: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
+    fontSize: 10,
+    color: PALETTE.accent.green,
+    letterSpacing: 1.5,
+    fontWeight: '900',
+    marginBottom: 4,
   },
   username: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.text.primary,
+    fontSize: 28,
+    fontWeight: '800',
+    color: PALETTE.text,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  onlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  onlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: PALETTE.accent.green,
+    marginRight: 6,
+  },
+  onlineText: {
+    fontSize: 10,
+    color: PALETTE.textDim,
+    fontWeight: '700',
+  },
+  avatarContainer: {
+    borderWidth: 2,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 8,
+    padding: 4,
+    backgroundColor: PALETTE.slot,
   },
 
+  // Sections
   section: {
-    marginBottom: theme.spacing.md,
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 14,
+    fontWeight: '900',
+    color: PALETTE.textDim,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   seeAll: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.primary.light,
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: PALETTE.accent.cyan,
   },
-  healthGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  healthCard: {
-    flex: 1,
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    alignItems: 'center',
-    marginHorizontal: theme.spacing.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-  },
-  healthIcon: {
-    fontSize: 32,
-    marginBottom: theme.spacing.xs,
-  },
-  healthValue: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-  },
-  healthLabel: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
-  },
-  emptyText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
-    padding: theme.spacing.xl,
-  },
-  actionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
-  },
-  actionButton: {
-    width: '48%',
-    marginBottom: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-    backgroundColor: theme.colors.background.tertiary,
-    ...theme.shadows.sm,
-  },
-  actionContent: {
-    padding: theme.spacing.lg,
-    alignItems: 'center',
-  },
+
+  // Buttons
   syncButtons: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
-  syncButton: {
-    padding: theme.spacing.sm,
-    backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.md,
+  retroButton: {
+    backgroundColor: PALETTE.surface,
     borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  syncButtonSmall: {
-    minWidth: 60,
-  },
-  syncButtonText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
-  },
-  syncButtonTextSmall: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
-  },
-  coachRecommendations: {
-    gap: theme.spacing.md,
-  },
-  recommendationCard: {
-    flexDirection: 'row',
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-    alignItems: 'center',
-  },
-  recIcon: {
-    fontSize: 28,
-    marginRight: theme.spacing.md,
-  },
-  recContent: {
-    flex: 1,
-  },
-  recTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
-  },
-  recMessage: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    lineHeight: 18,
-  },
-  priorityBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.text.disabled,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
+    borderBottomWidth: 3, // 3D clicky feel
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  highPriority: {
-    backgroundColor: theme.colors.stats.hp,
+  retroButtonSmall: {
+    paddingHorizontal: 8,
   },
-  mediumPriority: {
-    backgroundColor: theme.colors.stats.stamina,
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  priorityText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+  btnText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: PALETTE.accent.cyan,
   },
-  actionIcon: {
-    fontSize: 32,
-    marginBottom: theme.spacing.xs,
+
+  // Data Modules
+  healthGrid: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  actionText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+  dataModule: {
+    flex: 1,
+    backgroundColor: PALETTE.slot,
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 10,
+    borderBottomWidth: 3, // Retro depth
+  },
+  moduleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 4,
+  },
+  moduleLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  moduleValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: PALETTE.text,
+    fontFamily: 'monospace',
+  },
+  unit: {
+    fontSize: 12,
+    color: PALETTE.textDim,
+  },
+
+  // Quest Empty State
+  emptyState: {
+    padding: 20,
+    backgroundColor: PALETTE.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
+  },
+
+  // Control Panel Keys
+  actionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  controlKey: {
+    width: '31%', // roughly 3 per row
+    backgroundColor: PALETTE.surface,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 6,
+    borderBottomWidth: 4, // Deep keycap look
+    marginBottom: 4,
+  },
+  keyInner: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  keyLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

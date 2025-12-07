@@ -9,8 +9,67 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
+  interpolateColor,
+  useDerivedValue
 } from 'react-native-reanimated';
-import { ProgressBar } from './ProgressBar';
+
+// --- Retro Dark Configuration ---
+const RETRO_BORDER_WIDTH = 2;
+const RETRO_DEPTH = 5;
+const RETRO_RADIUS = 4;
+
+const PALETTE = {
+  panelBg: '#1e293b',      // Slate 800
+  panelBorder: '#0f172a',  // Slate 900
+  slotBg: '#020617',       // Deep Black
+  slotBorder: '#334155',   // Slate 700
+  text: '#f1f5f9',
+  textDim: '#64748b',
+  neon: {
+    hpHigh: '#4ade80',     // Green
+    hpMid: '#facc15',      // Yellow
+    hpLow: '#ef4444',      // Red
+    xp: '#3b82f6',         // Blue
+    xpGlow: '#60a5fa',     // Light Blue
+    gold: '#fbbf24',
+    streak: '#f97316',     // Orange
+  }
+};
+
+// --- Retro Bar Component ---
+const RetroStatBar = ({ 
+  current, 
+  max, 
+  color, 
+  height = 18,
+  label 
+}: { 
+  current: number; 
+  max: number; 
+  color: string;
+  height?: number;
+  label?: string;
+}) => {
+  const percent = Math.min(Math.max(current / max, 0), 1) * 100;
+  
+  return (
+    <View style={[styles.retroBarContainer, { height, borderColor: PALETTE.slotBorder }]}>
+      {/* Background Grid */}
+      <View style={styles.gridTexture} />
+      
+      {/* Fill */}
+      <View style={[styles.retroBarFill, { width: `${percent}%`, backgroundColor: color }]} />
+      
+      {/* Text Label Overlay */}
+      <View style={styles.barOverlay}>
+        <Text style={styles.barText}>{label}</Text>
+      </View>
+
+      {/* Glass Glare Effect */}
+      <View style={styles.retroBarGlare} />
+    </View>
+  );
+};
 
 interface StatsPanelProps {
   level: number;
@@ -36,13 +95,21 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
   const scale = useSharedValue(1);
   const streakScale = useSharedValue(1);
   
+  // HP Logic
+  const hpPercentage = hp / maxHp;
+  const getHpColor = () => {
+    if (hpPercentage > 0.5) return PALETTE.neon.hpHigh;
+    if (hpPercentage > 0.25) return PALETTE.neon.hpMid;
+    return PALETTE.neon.hpLow;
+  };
+
   // Pulse animation for low HP
   React.useEffect(() => {
-    if (hp / maxHp < 0.3) {
+    if (hpPercentage < 0.3) {
       scale.value = withRepeat(
         withSequence(
-          withTiming(1.05, { duration: 500 }),
-          withTiming(1, { duration: 500 })
+          withTiming(1.02, { duration: 200 }),
+          withTiming(1, { duration: 200 })
         ),
         -1,
         true
@@ -50,15 +117,15 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
     } else {
       scale.value = withSpring(1);
     }
-  }, [hp, maxHp]);
+  }, [hpPercentage]);
   
   // Pulse animation for streak
   React.useEffect(() => {
     if (streak > 0) {
       streakScale.value = withRepeat(
         withSequence(
-          withTiming(1.1, { duration: 600 }),
-          withTiming(1, { duration: 600 })
+          withTiming(1.05, { duration: 800 }),
+          withTiming(1, { duration: 800 })
         ),
         -1,
         true
@@ -74,68 +141,75 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
     transform: [{ scale: streakScale.value }],
   }));
   
-  const hpPercentage = hp / maxHp;
-  const hpColor = hpPercentage > 0.5
-    ? theme.colors.gradients.health
-    : hpPercentage > 0.3
-    ? [theme.colors.status.warning, theme.colors.status.error]
-    : theme.colors.gradients.health;
-  
   return (
     <View style={styles.container}>
-      {/* Level Badge */}
-      <View style={styles.levelBadge}>
-        <View style={styles.levelContent}>
-          <Text style={styles.levelText}>LVL</Text>
+      {/* Left Column: Level Badge */}
+      <View style={styles.levelColumn}>
+        <View style={styles.levelPlate}>
+          <Text style={styles.levelLabel}>LVL</Text>
           <Text style={styles.levelNumber}>{level}</Text>
+          <View style={styles.bolts}>
+            <View style={styles.bolt} />
+            <View style={styles.bolt} />
+          </View>
         </View>
       </View>
       
-      {/* Stats Container */}
-      <View style={styles.statsContainer}>
+      {/* Right Column: Stats */}
+      <View style={styles.statsColumn}>
+        
         {/* HP Bar */}
         <Animated.View style={[styles.statRow, hpAnimatedStyle]}>
-          <View style={styles.statHeader}>
-            <MaterialCommunityIcons name="heart" size={18} color={theme.colors.stats.hp} style={{ marginRight: 4 }} />
-            <Text style={styles.statLabel}>HP</Text>
+          <View style={styles.labelContainer}>
+             <Text style={[styles.statLabel, { color: getHpColor() }]}>HP</Text>
           </View>
-          <ProgressBar
-            current={hp}
-            max={maxHp}
-            color={hpColor}
-            height={16}
-            showLabel={true}
-            label={`${hp} / ${maxHp}`}
-          />
+          <View style={{ flex: 1 }}>
+            <RetroStatBar
+              current={hp}
+              max={maxHp}
+              color={getHpColor()}
+              height={20}
+              label={`${hp}/${maxHp}`}
+            />
+          </View>
         </Animated.View>
         
         {/* XP Bar */}
         <View style={styles.statRow}>
-          <View style={styles.statHeader}>
-            <MaterialCommunityIcons name="star" size={18} color={theme.colors.stats.xp} style={{ marginRight: 4 }} />
-            <Text style={styles.statLabel}>XP</Text>
+          <View style={styles.labelContainer}>
+            <Text style={[styles.statLabel, { color: PALETTE.neon.xp }]}>XP</Text>
           </View>
-          <ProgressBar
-            current={currentXp}
-            max={xpForNextLevel}
-            color={theme.colors.gradients.xp}
-            height={16}
-            showLabel={true}
-            label={`${currentXp} / ${xpForNextLevel}`}
-          />
+          <View style={{ flex: 1 }}>
+            <RetroStatBar
+              current={currentXp}
+              max={xpForNextLevel}
+              color={PALETTE.neon.xp}
+              height={20}
+              label={`${currentXp}/${xpForNextLevel}`}
+            />
+          </View>
         </View>
         
-        {/* Gold & Streak */}
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Bottom Row: Gold & Streak */}
         <View style={styles.bottomRow}>
-          <View style={styles.goldContainer}>
-            <MaterialCommunityIcons name="hand-coin" size={18} color={theme.colors.accent.gold} style={{ marginRight: 4 }} />
-            <Text style={styles.goldText}>{gold.toLocaleString()}</Text>
+          {/* Gold */}
+          <View style={[styles.readoutBox, { borderColor: PALETTE.neon.gold }]}>
+            <MaterialCommunityIcons name="currency-usd" size={16} color={PALETTE.neon.gold} />
+            <Text style={[styles.readoutText, { color: PALETTE.neon.gold }]}>
+              {gold.toLocaleString()}
+            </Text>
           </View>
           
+          {/* Streak */}
           {streak > 0 && (
-            <Animated.View style={[styles.streakContainer, streakAnimatedStyle]}>
-              <MaterialCommunityIcons name="fire" size={18} color={theme.colors.status.warning} style={{ marginRight: 4 }} />
-              <Text style={styles.streakText}>{streak} day{streak !== 1 ? 's' : ''}</Text>
+            <Animated.View style={[styles.readoutBox, { borderColor: PALETTE.neon.streak }, streakAnimatedStyle]}>
+              <MaterialCommunityIcons name="fire" size={16} color={PALETTE.neon.streak} />
+              <Text style={[styles.readoutText, { color: PALETTE.neon.streak }]}>
+                {streak} DAY{streak !== 1 ? 'S' : ''}
+              </Text>
             </Animated.View>
           )}
         </View>
@@ -147,99 +221,148 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-    ...theme.shadows.md,
+    backgroundColor: PALETTE.panelBg,
+    borderRadius: RETRO_RADIUS,
+    borderWidth: RETRO_BORDER_WIDTH,
+    borderColor: PALETTE.panelBorder,
+    borderBottomWidth: RETRO_DEPTH, // 3D effect
+    marginBottom: 20,
+    overflow: 'hidden',
   },
-  levelBadge: {
-    width: 70,
-    height: 70,
-    marginRight: theme.spacing.md,
-  },
-  levelContent: {
-    flex: 1,
-    borderRadius: theme.borderRadius.lg,
+  levelColumn: {
+    width: 80,
+    padding: 12,
+    borderRightWidth: 2,
+    borderRightColor: PALETTE.panelBorder,
+    backgroundColor: '#161e2b', // Slightly darker than panel
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.accent.gold,
-    borderWidth: 2,
-    borderColor: theme.colors.accent.gold,
   },
-  levelText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.background.primary,
+  levelPlate: {
+    width: '100%',
+    aspectRatio: 1,
+    backgroundColor: '#000',
+    borderWidth: 2,
+    borderColor: '#475569',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  levelLabel: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   levelNumber: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.background.primary,
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: '800',
+    lineHeight: 32,
   },
-  statsContainer: {
+  bolts: {
+    position: 'absolute',
+    top: 2,
+    left: 2,
+    right: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  bolt: {
+    width: 3,
+    height: 3,
+    backgroundColor: '#475569',
+    borderRadius: 1.5,
+  },
+  statsColumn: {
     flex: 1,
+    padding: 12,
   },
   statRow: {
-    marginBottom: theme.spacing.sm,
-  },
-  statHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 8,
   },
-  statIcon: {
-    fontSize: theme.typography.fontSize.lg,
-    marginRight: theme.spacing.xs,
+  labelContainer: {
+    width: 30,
+    marginRight: 8,
+    alignItems: 'flex-start',
   },
   statLabel: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  
+  // Retro Bar Styles
+  retroBarContainer: {
+    backgroundColor: PALETTE.slotBg,
+    borderWidth: 2,
+    borderRadius: 2,
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  retroBarFill: {
+    height: '100%',
+  },
+  retroBarGlare: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  gridTexture: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.1,
+    backgroundColor: '#334155', // Placeholder for scanline texture
+  },
+  barOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  barText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0,0,0,1)',
+    textShadowRadius: 2,
+  },
+
+  // Bottom Row
+  divider: {
+    height: 2,
+    backgroundColor: PALETTE.slotBorder,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: PALETTE.panelBorder,
+    marginVertical: 8,
   },
   bottomRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: theme.spacing.xs,
   },
-  goldContainer: {
+  readoutBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.tertiary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
+    backgroundColor: PALETTE.slotBg,
     borderWidth: 1,
-    borderColor: theme.colors.accent.gold,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 10,
+    // Bottom border thicker for mini-3D effect
+    borderBottomWidth: 3, 
   },
-  goldIcon: {
-    fontSize: theme.typography.fontSize.lg,
-    marginRight: theme.spacing.xs,
-  },
-  goldText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.accent.gold,
-  },
-  streakContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background.tertiary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: theme.colors.status.warning,
-  },
-  streakIcon: {
-    fontSize: theme.typography.fontSize.lg,
-    marginRight: theme.spacing.xs,
-  },
-  streakText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.status.warning,
+  readoutText: {
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: 'monospace', // Falls back to sans-serif if not available
   },
 });

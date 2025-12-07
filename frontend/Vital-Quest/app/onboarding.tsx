@@ -1,26 +1,44 @@
 import { CharacterAvatar } from '@/components/game/CharacterAvatar';
-import { theme } from '@/constants/theme';
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
 import { generateDailyQuests } from '@/services/gamificationEngine';
 import { initialAchievements } from '@/services/mockData';
 import { initializeNotifications } from '@/services/notifications';
 import { useGameStore } from '@/store/gameStore';
-import { LinearGradient } from 'expo-linear-gradient';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// --- Retro Palette ---
+const PALETTE = {
+  bg: '#0f172a',           // Deep Slate
+  surface: '#1e293b',      // Slate 800
+  surfaceHighlight: '#334155',
+  slot: '#020617',         // Black/Void (Input fields)
+  text: '#f8fafc',
+  textDim: '#64748b',
+  accent: {
+    cyan: '#22d3ee',
+    green: '#4ade80',
+    gold: '#fbbf24',
+    purple: '#c084fc',
+    red: '#ef4444',
+  }
+};
+
+const RETRO_BORDER = 2;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -34,7 +52,7 @@ export default function OnboardingScreen() {
   const handleNext = () => {
     if (step === 1) {
       if (!username.trim()) {
-        Alert.alert('Username Required', 'Please enter a username to continue');
+        Alert.alert('INPUT_ERROR', 'USERNAME_REQUIRED');
         return;
       }
       setStep(2);
@@ -47,12 +65,9 @@ export default function OnboardingScreen() {
 
   const handleComplete = async () => {
     setIsLoading(true);
-
     try {
-      // 1. Initialize user profile
       initializeUser(username.trim());
-
-      // 2. Add initial achievements
+      
       if (achievements.length === 0) {
         initialAchievements.forEach((achievement) => {
           useGameStore.setState((state) => ({
@@ -61,241 +76,204 @@ export default function OnboardingScreen() {
         });
       }
 
-      // 3. Generate daily quests
       const dailyQuests = generateDailyQuests();
       dailyQuests.forEach((quest) => addQuest(quest));
-
-      // 4. Initialize notifications
+      
       await initializeNotifications();
+      if (isAvailable) await initHealthConnect();
 
-      // 5. Initialize Health Connect if available
-      if (isAvailable) {
-        await initHealthConnect();
-      }
-
-      // Navigate to main app
       router.replace('/(tabs)');
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      Alert.alert('Setup Error', 'There was an error setting up your account. Please try again.');
+      Alert.alert('SYSTEM_FAILURE', 'INITIALIZATION_FAILED');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- Step 1: Character Creation ---
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Welcome, Adventurer!</Text>
-      <Text style={styles.stepDescription}>
-        Transform your health journey into an epic quest. Earn XP, level up, and unlock achievements by
-        completing daily health activities.
-      </Text>
+      <View style={styles.headerBlock}>
+        <Text style={styles.stepTitle}>&gt; NEW_GAME</Text>
+        <Text style={styles.stepDescription}>
+          INITIALIZE CHARACTER PROFILE. ENTER CREDENTIALS TO BEGIN SIMULATION.
+        </Text>
+      </View>
 
-      <View style={styles.avatarContainer}>
+      <View style={styles.avatarSection}>
         <CharacterAvatar level={1} size={120} />
       </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Choose Your Hero Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter username..."
-          placeholderTextColor={theme.colors.text.tertiary}
-          value={username}
-          onChangeText={setUsername}
-          maxLength={20}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+      <View style={styles.inputSection}>
+        <Text style={styles.inputLabel}>OPERATIVE_ID</Text>
+        <View style={styles.terminalInputContainer}>
+          <Text style={styles.terminalPrompt}>&gt;</Text>
+          <TextInput
+            style={styles.terminalInput}
+            placeholder="ENTER_NAME..."
+            placeholderTextColor={PALETTE.textDim}
+            value={username}
+            onChangeText={setUsername}
+            maxLength={20}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
       </View>
 
       <View style={styles.featureList}>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>⭐</Text>
-          <Text style={styles.featureText}>Level up by completing health activities</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🎯</Text>
-          <Text style={styles.featureText}>Complete daily and weekly quests</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🏆</Text>
-          <Text style={styles.featureText}>Unlock achievements and earn rewards</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🔥</Text>
-          <Text style={styles.featureText}>Build streaks and stay motivated</Text>
-        </View>
+        <FeatureItem icon="star-four-points" text="EARN XP & LEVEL UP" color={PALETTE.accent.cyan} />
+        <FeatureItem icon="target" text="COMPLETE DAILY OPS" color={PALETTE.accent.red} />
+        <FeatureItem icon="trophy" text="UNLOCK BADGES" color={PALETTE.accent.gold} />
+        <FeatureItem icon="fire" text="MAINTAIN STREAK" color={PALETTE.accent.purple} />
       </View>
     </View>
   );
 
+  // --- Step 2: System Integration ---
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Track Your Health</Text>
-      <Text style={styles.stepDescription}>
-        Vital Quest integrates with your health data to automatically track your progress and reward you
-        with XP.
-      </Text>
+      <View style={styles.headerBlock}>
+        <Text style={styles.stepTitle}>&gt; SYSTEM_LINK</Text>
+        <Text style={styles.stepDescription}>
+          CONNECTING BIOMETRIC SENSORS. SELECT MODULES TO TRACK.
+        </Text>
+      </View>
 
-      <View style={styles.healthFeatures}>
-        <View style={styles.healthCard}>
-          <Text style={styles.healthIcon}>👣</Text>
-          <Text style={styles.healthTitle}>Steps</Text>
-          <Text style={styles.healthDesc}>Track daily steps and walking</Text>
-        </View>
-
-        <View style={styles.healthCard}>
-          <Text style={styles.healthIcon}>💪</Text>
-          <Text style={styles.healthTitle}>Exercise</Text>
-          <Text style={styles.healthDesc}>Log workouts and activities</Text>
-        </View>
-
-        <View style={styles.healthCard}>
-          <Text style={styles.healthIcon}>🧘</Text>
-          <Text style={styles.healthTitle}>Meditation</Text>
-          <Text style={styles.healthDesc}>Track mindfulness sessions</Text>
-        </View>
-
-        <View style={styles.healthCard}>
-          <Text style={styles.healthIcon}>💧</Text>
-          <Text style={styles.healthTitle}>Hydration</Text>
-          <Text style={styles.healthDesc}>Monitor water intake</Text>
-        </View>
-
-        <View style={styles.healthCard}>
-          <Text style={styles.healthIcon}>🍽️</Text>
-          <Text style={styles.healthTitle}>Nutrition</Text>
-          <Text style={styles.healthDesc}>Log meals and eating habits</Text>
-        </View>
-
-        <View style={styles.healthCard}>
-          <Text style={styles.healthIcon}>😴</Text>
-          <Text style={styles.healthTitle}>Sleep</Text>
-          <Text style={styles.healthDesc}>Track sleep quality</Text>
-        </View>
+      <View style={styles.healthGrid}>
+        <HealthModule icon="shoe-print" title="STEPS" desc="PEDOMETER" color={PALETTE.accent.cyan} />
+        <HealthModule icon="dumbbell" title="TRAINING" desc="ACTIVITY LOG" color={PALETTE.accent.red} />
+        <HealthModule icon="meditation" title="MIND" desc="NEURAL SYNC" color={PALETTE.accent.purple} />
+        <HealthModule icon="cup-water" title="HYDRATION" desc="FLUID LEVELS" color={PALETTE.accent.cyan} />
+        <HealthModule icon="food-apple" title="NUTRITION" desc="FUEL INTAKE" color={PALETTE.accent.green} />
+        <HealthModule icon="power-sleep" title="STASIS" desc="SLEEP CYCLE" color={PALETTE.accent.gold} />
       </View>
 
       {isAvailable && (
-        <View style={styles.healthConnectBanner}>
-          <Text style={styles.bannerIcon}>📱</Text>
-          <View style={styles.bannerContent}>
-            <Text style={styles.bannerTitle}>Health Connect Available</Text>
-            <Text style={styles.bannerText}>
-              Automatically sync data from your smartwatch and fitness apps
-            </Text>
+        <View style={styles.banner}>
+          <MaterialCommunityIcons name="connection" size={24} color={PALETTE.accent.green} style={{marginRight: 10}} />
+          <View>
+            <Text style={[styles.bannerTitle, { color: PALETTE.accent.green }]}>HARDWARE DETECTED</Text>
+            <Text style={styles.bannerText}>HEALTH_CONNECT module ready for sync.</Text>
           </View>
         </View>
       )}
     </View>
   );
 
+  // --- Step 3: Launch ---
   const renderStep3 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Ready to Begin!</Text>
-      <Text style={styles.stepDescription}>
-        Your adventure starts now. Complete quests, earn XP, and become the healthiest version of yourself!
-      </Text>
-
-      <View style={styles.readyContainer}>
-        <CharacterAvatar level={1} size={150} />
-        <Text style={styles.usernameDisplay}>{username}</Text>
-        <Text style={styles.levelDisplay}>Level 1 Adventurer</Text>
+      <View style={styles.headerBlock}>
+        <Text style={styles.stepTitle}>&gt; READY_TO_LAUNCH</Text>
+        <Text style={styles.stepDescription}>
+          SYSTEM CHECK COMPLETE. PREPARING STARTING INVENTORY.
+        </Text>
       </View>
 
-      <View style={styles.startingBonuses}>
-        <Text style={styles.bonusesTitle}>Starting Bonuses:</Text>
-        <View style={styles.bonusItem}>
-          <Text style={styles.bonusIcon}>❤️</Text>
-          <Text style={styles.bonusText}>100 HP</Text>
+      <View style={styles.idCard}>
+        <CharacterAvatar level={1} size={100} />
+        <View style={styles.idInfo}>
+          <Text style={styles.idLabel}>ID CARD</Text>
+          <Text style={styles.idName}>{username}</Text>
+          <Text style={styles.idLevel}>LVL.1 ROOKIE</Text>
         </View>
-        <View style={styles.bonusItem}>
-          <Text style={styles.bonusIcon}>💰</Text>
-          <Text style={styles.bonusText}>0 Gold</Text>
-        </View>
-        <View style={styles.bonusItem}>
-          <Text style={styles.bonusIcon}>📜</Text>
-          <Text style={styles.bonusText}>5 Daily Quests</Text>
-        </View>
+      </View>
+
+      <View style={styles.inventoryContainer}>
+        <Text style={styles.inventoryTitle}>// STARTER_PACK</Text>
+        <BonusItem icon="heart" text="100 HP" color={PALETTE.accent.red} />
+        <BonusItem icon="hand-coin" text="0 CREDITS" color={PALETTE.accent.gold} />
+        <BonusItem icon="scroll-text" text="5 MISSIONS" color={PALETTE.accent.cyan} />
       </View>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <LinearGradient
-        colors={[theme.colors.background.primary, theme.colors.background.secondary]}
-        style={styles.container}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {/* Progress Indicator */}
-            <View style={styles.progressContainer}>
-              {[1, 2, 3].map((s) => (
-                <View
-                  key={s}
-                  style={[styles.progressDot, s <= step && styles.progressDotActive]}
-                />
-              ))}
-            </View>
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={[styles.progressSegment, step >= 1 && styles.progressActive]} />
+            <View style={[styles.progressSegment, step >= 2 && styles.progressActive]} />
+            <View style={[styles.progressSegment, step >= 3 && styles.progressActive]} />
+          </View>
 
-            {/* Step Content */}
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
-          </ScrollView>
+          {step === 1 && renderStep1()}
+          {step === 2 && renderStep2()}
+          {step === 3 && renderStep3()}
+        </ScrollView>
 
-          {/* Navigation Buttons */}
-          <View style={styles.buttonContainer}>
-            {step > 1 && (
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => setStep(step - 1)}
-                disabled={isLoading}
-              >
-                <Text style={styles.backButtonText}>Back</Text>
-              </TouchableOpacity>
-            )}
-
+        {/* Navigation Footer */}
+        <View style={styles.footer}>
+          {step > 1 && (
             <TouchableOpacity
-              style={[styles.nextButton, step === 1 && styles.nextButtonFull]}
-              onPress={handleNext}
+              style={styles.backButton}
+              onPress={() => setStep(step - 1)}
               disabled={isLoading}
             >
-              {isLoading ? (
-                <ActivityIndicator color={theme.colors.text.primary} />
-              ) : (
-                <LinearGradient
-                  colors={theme.colors.gradients.primary}
-                  style={styles.nextGradient}
-                >
-                  <Text style={styles.nextButtonText}>
-                    {step === 3 ? 'Start Adventure!' : 'Next'}
-                  </Text>
-                </LinearGradient>
-              )}
+              <Text style={styles.backButtonText}>&lt; BACK</Text>
             </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </LinearGradient>
+          )}
+
+          <TouchableOpacity
+            style={[styles.nextButton, step === 1 && { flex: 1 }]}
+            onPress={handleNext}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color={PALETTE.bg} />
+            ) : (
+              <Text style={styles.nextButtonText}>
+                {step === 3 ? 'INITIALIZE >>' : 'CONTINUE >'}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+// --- Helper Components ---
+
+const FeatureItem = ({ icon, text, color }: any) => (
+  <View style={[styles.featureRow, { borderColor: color }]}>
+    <View style={[styles.iconBox, { backgroundColor: color }]}>
+      <MaterialCommunityIcons name={icon} size={16} color={PALETTE.bg} />
+    </View>
+    <Text style={[styles.featureText, { color }]}>{text}</Text>
+  </View>
+);
+
+const HealthModule = ({ icon, title, desc, color }: any) => (
+  <View style={styles.moduleCard}>
+    <MaterialCommunityIcons name={icon} size={28} color={color} style={{ marginBottom: 8 }} />
+    <Text style={[styles.moduleTitle, { color }]}>{title}</Text>
+    <Text style={styles.moduleDesc}>{desc}</Text>
+  </View>
+);
+
+const BonusItem = ({ icon, text, color }: any) => (
+  <View style={styles.bonusRow}>
+    <MaterialCommunityIcons name={icon} size={16} color={color} style={{ marginRight: 12 }} />
+    <Text style={styles.bonusText}>{text}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
-  },
-  container: {
-    flex: 1,
+    backgroundColor: PALETTE.bg,
   },
   keyboardView: {
     flex: 1,
@@ -304,213 +282,261 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: theme.spacing.xl,
+    padding: 24,
   },
+  
+  // Header
+  headerBlock: {
+    marginBottom: 24,
+  },
+  stepTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: PALETTE.accent.cyan,
+    fontFamily: 'monospace',
+    marginBottom: 8,
+    letterSpacing: 1,
+  },
+  stepDescription: {
+    fontSize: 12,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
+    lineHeight: 18,
+  },
+
+  // Progress Bar
   progressContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing['2xl'],
+    marginBottom: 32,
+    gap: 8,
   },
-  progressDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: theme.colors.background.tertiary,
+  progressSegment: {
+    flex: 1,
+    height: 6,
+    backgroundColor: PALETTE.surfaceHighlight,
+    borderRadius: 2,
   },
-  progressDotActive: {
-    backgroundColor: theme.colors.primary.light,
+  progressActive: {
+    backgroundColor: PALETTE.accent.cyan,
+    shadowColor: PALETTE.accent.cyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
+
+  // Step 1 Styles
   stepContainer: {
     flex: 1,
   },
-  stepTitle: {
-    fontSize: theme.typography.fontSize['4xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.text.primary,
-    textAlign: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  stepDescription: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: theme.spacing['2xl'],
-  },
-  avatarContainer: {
+  avatarSection: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: 32,
   },
-  inputContainer: {
-    marginBottom: theme.spacing.xl,
+  inputSection: {
+    marginBottom: 32,
   },
   inputLabel: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 10,
+    fontWeight: '900',
+    color: PALETTE.accent.cyan,
+    marginBottom: 8,
+    fontFamily: 'monospace',
   },
-  input: {
-    backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.primary,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+  terminalInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: PALETTE.slot,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
+    paddingHorizontal: 12,
+  },
+  terminalPrompt: {
+    color: PALETTE.accent.green,
+    fontWeight: 'bold',
+    marginRight: 8,
+    fontSize: 18,
+  },
+  terminalInput: {
+    flex: 1,
+    color: PALETTE.text,
+    fontSize: 18,
+    fontFamily: 'monospace',
+    paddingVertical: 16,
+    fontWeight: 'bold',
   },
   featureList: {
-    gap: theme.spacing.md,
+    gap: 12,
   },
-  featureItem: {
+  featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
+    backgroundColor: PALETTE.surface,
+    padding: 12,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
   },
-  featureIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.md,
+  iconBox: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+    marginRight: 12,
   },
   featureText: {
-    flex: 1,
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+    fontSize: 12,
   },
-  healthFeatures: {
+
+  // Step 2 Styles
+  healthGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.xl,
+    gap: 12,
+    marginBottom: 24,
   },
-  healthCard: {
-    width: '48%',
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
+  moduleCard: {
+    width: '48%', // Approx 2 columns
+    backgroundColor: PALETTE.slot,
+    padding: 16,
+    borderRadius: 4,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: PALETTE.surfaceHighlight,
     alignItems: 'center',
+    borderBottomWidth: 3,
   },
-  healthIcon: {
-    fontSize: 32,
-    marginBottom: theme.spacing.sm,
+  moduleTitle: {
+    fontSize: 10,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+    marginTop: 4,
+    marginBottom: 2,
   },
-  healthTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+  moduleDesc: {
+    fontSize: 8,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
   },
-  healthDesc: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
-  },
-  healthConnectBanner: {
+  banner: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.primary.dark,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
     alignItems: 'center',
-  },
-  bannerIcon: {
-    fontSize: 32,
-    marginRight: theme.spacing.md,
-  },
-  bannerContent: {
-    flex: 1,
+    backgroundColor: 'rgba(74, 222, 128, 0.1)',
+    borderWidth: 1,
+    borderColor: PALETTE.accent.green,
+    padding: 16,
+    borderRadius: 4,
+    borderStyle: 'dashed',
   },
   bannerTitle: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    marginBottom: 2,
   },
   bannerText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
+    fontSize: 10,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
   },
-  readyContainer: {
+
+  // Step 3 Styles
+  idCard: {
+    flexDirection: 'row',
+    backgroundColor: PALETTE.surface,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
+    padding: 16,
+    marginBottom: 24,
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
   },
-  usernameDisplay: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginTop: theme.spacing.lg,
+  idInfo: {
+    marginLeft: 16,
+    flex: 1,
   },
-  levelDisplay: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.primary.light,
-    marginTop: theme.spacing.xs,
+  idLabel: {
+    fontSize: 10,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
+    marginBottom: 4,
   },
-  startingBonuses: {
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.xl,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+  idName: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: PALETTE.text,
+    fontFamily: 'monospace',
+    textTransform: 'uppercase',
+    marginBottom: 4,
   },
-  bonusesTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
-    textAlign: 'center',
+  idLevel: {
+    fontSize: 12,
+    color: PALETTE.accent.cyan,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
-  bonusItem: {
+  inventoryContainer: {
+    backgroundColor: PALETTE.slot,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
+    padding: 16,
+  },
+  inventoryTitle: {
+    fontSize: 12,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
+    marginBottom: 16,
+  },
+  bonusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: theme.spacing.sm,
-  },
-  bonusIcon: {
-    fontSize: 20,
-    marginRight: theme.spacing.sm,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: PALETTE.surfaceHighlight,
   },
   bonusText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
+    color: PALETTE.text,
+    fontFamily: 'monospace',
+    fontSize: 14,
   },
-  buttonContainer: {
+
+  // Footer / Buttons
+  footer: {
     flexDirection: 'row',
-    padding: theme.spacing.xl,
-    gap: theme.spacing.md,
+    padding: 24,
+    paddingTop: 0,
+    gap: 12,
   },
   backButton: {
     flex: 1,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.dark,
+    padding: 16,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
   },
   backButtonText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    color: PALETTE.textDim,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
   },
   nextButton: {
     flex: 2,
-    borderRadius: theme.borderRadius.lg,
-    overflow: 'hidden',
-  },
-  nextButtonFull: {
-    flex: 1,
-  },
-  nextGradient: {
-    padding: theme.spacing.lg,
+    backgroundColor: PALETTE.accent.cyan,
+    padding: 16,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 4,
+    borderBottomWidth: 4,
+    borderBottomColor: '#0891b2', // Darker cyan
   },
   nextButtonText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    color: PALETTE.bg,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+    fontSize: 14,
   },
 });

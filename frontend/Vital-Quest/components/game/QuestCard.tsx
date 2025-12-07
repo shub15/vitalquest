@@ -10,31 +10,39 @@ import Animated, {
   withSpring,
   withTiming
 } from 'react-native-reanimated';
-import { ProgressBar } from './ProgressBar';
 
-// Helper to map legacy emojis/invalid names to valid MaterialCommunityIcons
+// --- Retro Dark Configuration ---
+const RETRO_BORDER_WIDTH = 2;
+const RETRO_DEPTH = 5;
+const RETRO_RADIUS = 4;
+
+// Color Palette (Cyberpunk/Dark RPG)
+const PALETTE = {
+  cardBg: '#1e293b',       // Slate 800
+  cardBorder: '#0f172a',   // Slate 900 (The "Shadow")
+  cardCompleteBg: '#064e3b', // Dark Emerald
+  cardCompleteBorder: '#022c22',
+  text: '#f1f5f9',         // Slate 100
+  textDim: '#94a3b8',      // Slate 400
+  slotBg: '#020617',       // Almost Black (for empty bars/checks)
+  slotBorder: '#334155',   // Slate 700
+  neon: {
+    green: '#4ade80',
+    blue: '#22d3ee',
+    red: '#fb7185',
+    purple: '#e879f9',
+    gold: '#facc15'
+  }
+};
+
 const getIconName = (iconName: string): any => {
   const map: Record<string, string> = {
-    '👣': 'shoe-print',
-    '💪': 'dumbbell',
-    '💧': 'water',
-    '🧘': 'meditation',
-    '🍽️': 'food-apple',
-    '🏃': 'run',
-    '⚡': 'flash',
-    '🕉️': 'flower-tulip',
-    '😴': 'bed',
-    '🌙': 'moon-waning-crescent',
-    '🔥': 'fire',
-    '⭐': 'star',
-    '💰': 'hand-coin',
-    '🎉': 'party-popper',
-    '🏆': 'trophy',
-    '✨': 'star-four-points',
-    '🎯': 'target',
-    'coins': 'hand-coin',
+    '👣': 'shoe-print', '💪': 'dumbbell', '💧': 'water', '🧘': 'meditation',
+    '🍽️': 'food-apple', '🏃': 'run', '⚡': 'flash', '🕉️': 'flower-tulip',
+    '😴': 'bed', '🌙': 'moon-waning-crescent', '🔥': 'fire', '⭐': 'star',
+    '💰': 'hand-coin', '🎉': 'party-popper', '🏆': 'trophy', '✨': 'star-four-points',
+    '🎯': 'target', 'coins': 'hand-coin',
   };
-  
   return map[iconName] || iconName;
 };
 
@@ -45,6 +53,22 @@ interface QuestCardProps {
 }
 
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
+// --- Retro CRT Progress Bar ---
+const RetroProgressBar = ({ current, max, color }: { current: number; max: number; color: string }) => {
+  const percent = Math.min(Math.max(current / max, 0), 1) * 100;
+  return (
+    <View style={styles.retroProgressContainer}>
+      {/* Background Grid Texture */}
+      <View style={styles.gridTexture} />
+      
+      <View style={[styles.retroProgressFill, { width: `${percent}%`, backgroundColor: color }]} />
+      
+      {/* CRT Scanline Glare */}
+      <View style={styles.retroProgressGlare} />
+    </View>
+  );
+};
 
 export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete }) => {
   const scale = useSharedValue(1);
@@ -65,136 +89,129 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
   
   const handlePress = () => {
     scale.value = withSequence(
-      withTiming(0.95, { duration: 100 }),
-      withSpring(1, { damping: 10 })
+      withTiming(0.95, { duration: 50 }),
+      withSpring(1, { damping: 12, stiffness: 200 })
     );
-    
-    if (onPress) {
-      setTimeout(() => onPress(), 100);
-    }
+    if (onPress) setTimeout(() => onPress(), 100);
   };
   
   const handleComplete = () => {
     if (isComplete) return;
-    
     setLocalCompleted(true);
     checkScale.value = withSequence(
-      withSpring(1.2, { damping: 8 }),
-      withSpring(1, { damping: 10 })
+      withSpring(1.5, { damping: 8 }),
+      withSpring(1, { damping: 12 })
     );
-    
-    if (onComplete) {
-      setTimeout(() => onComplete(), 300);
-    }
+    if (onComplete) setTimeout(() => onComplete(), 300);
   };
   
   const getDifficultyColor = () => {
     switch (quest.difficulty) {
-      case 'easy':
-        return theme.colors.status.success;
-      case 'medium':
-        return theme.colors.status.info;
-      case 'hard':
-        return theme.colors.status.warning;
-      case 'epic':
-        return theme.colors.accent.legendary;
-      default:
-        return theme.colors.text.secondary;
+      case 'easy': return PALETTE.neon.green; 
+      case 'medium': return PALETTE.neon.blue; 
+      case 'hard': return PALETTE.neon.red; 
+      case 'epic': return PALETTE.neon.purple; 
+      default: return PALETTE.textDim;
     }
   };
-  
-  const getTypeColor = () => {
-    switch (quest.type) {
-      case 'daily':
-        return theme.colors.quest.daily;
-      case 'weekly':
-        return theme.colors.quest.weekly;
-      case 'custom':
-        return theme.colors.quest.custom;
-      default:
-        return theme.colors.primary.main;
-    }
-  };
-  
+
   return (
     <AnimatedTouchable
-      style={[styles.container, cardAnimatedStyle, isComplete && styles.completedContainer]}
+      style={[
+        styles.container, 
+        cardAnimatedStyle,
+        { 
+          backgroundColor: isComplete ? PALETTE.cardCompleteBg : PALETTE.cardBg,
+          borderColor: isComplete ? PALETTE.cardCompleteBorder : PALETTE.cardBorder,
+          borderBottomWidth: isComplete ? RETRO_BORDER_WIDTH : RETRO_DEPTH 
+        }
+      ]}
       onPress={handlePress}
-      activeOpacity={0.9}
+      activeOpacity={1} 
     >
-      <View style={[styles.content, isComplete && styles.completedContent]}>
-        <View style={styles.contentInner}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.iconContainer}>
-              <MaterialCommunityIcons name={getIconName(quest.icon)} size={28} color={theme.colors.text.primary} />
-            </View>
-            
-            <View style={styles.headerInfo}>
-              <View style={styles.badges}>
-                <View style={[styles.typeBadge, { backgroundColor: getTypeColor() }]}>
-                  <Text style={styles.badgeText}>{quest.type.toUpperCase()}</Text>
-                </View>
-                <View style={[styles.difficultyBadge, { borderColor: getDifficultyColor() }]}>
-                  <Text style={[styles.badgeText, { color: getDifficultyColor() }]}>
-                    {quest.difficulty.toUpperCase()}
-                  </Text>
-                </View>
+      <View style={styles.contentInner}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={[styles.iconBox, { borderColor: getDifficultyColor() }]}>
+            <MaterialCommunityIcons 
+              name={getIconName(quest.icon)} 
+              size={24} 
+              color={getDifficultyColor()} 
+            />
+          </View>
+          
+          <View style={styles.headerInfo}>
+            <View style={styles.badges}>
+              {/* Inverted "Select" Button Badge */}
+              <View style={[styles.pixelBadge, { backgroundColor: getDifficultyColor() }]}>
+                <Text style={styles.pixelBadgeText}>{quest.type}</Text>
               </View>
-              
-              <Text style={styles.title} numberOfLines={1}>
-                {quest.title}
+              <Text style={[styles.difficultyText, { color: getDifficultyColor() }]}>
+                LVL.{quest.difficulty === 'epic' ? '99' : quest.difficulty === 'hard' ? '50' : '10'}
               </Text>
             </View>
             
-            {/* Checkbox */}
-            <Pressable
-              style={[styles.checkbox, isComplete && styles.checkboxCompleted]}
-              onPress={handleComplete}
-              disabled={isComplete}
-            >
-              {isComplete && (
-                <Animated.View style={[checkAnimatedStyle]}>
-                  <MaterialCommunityIcons name="check" size={20} color={theme.colors.text.primary} />
-                </Animated.View>
-              )}
-            </Pressable>
+            <Text style={[styles.title, isComplete && styles.titleComplete]} numberOfLines={1}>
+              {quest.title}
+            </Text>
           </View>
           
-          {/* Description */}
-          <Text style={styles.description} numberOfLines={2}>
-            {quest.description}
-          </Text>
-          
-          {/* Progress */}
-          {!isComplete && (
-            <ProgressBar
-              current={quest.progress}
-              max={quest.target}
-              color={[getTypeColor(), theme.colors.primary.light]}
-              height={12}
-              showLabel={false}
-              style={styles.progressBar}
-            />
-          )}
-          
-          {/* Rewards */}
-          <View style={styles.rewards}>
-            <View style={styles.reward}>
-              <MaterialCommunityIcons name="star" size={14} color={theme.colors.text.secondary} style={{ marginRight: 4 }} />
-              <Text style={styles.rewardText}>+{quest.xpReward} XP</Text>
-            </View>
-            <View style={styles.reward}>
-              <MaterialCommunityIcons name="hand-coin" size={14} color={theme.colors.text.secondary} style={{ marginRight: 4 }} />
-              <Text style={styles.rewardText}>+{quest.goldReward} Gold</Text>
-            </View>
-            {quest.streak > 0 && (
-              <View style={styles.reward}>
-                <MaterialCommunityIcons name="fire" size={14} color={theme.colors.text.secondary} style={{ marginRight: 4 }} />
-                <Text style={styles.rewardText}>{quest.streak} streak</Text>
-              </View>
+          {/* Dark Slot Checkbox */}
+          <Pressable
+            style={[
+              styles.checkbox, 
+              isComplete && { backgroundColor: PALETTE.neon.green, borderColor: PALETTE.neon.green }
+            ]}
+            onPress={handleComplete}
+            disabled={isComplete}
+          >
+            {isComplete && (
+              <Animated.View style={checkAnimatedStyle}>
+                <MaterialCommunityIcons name="skull" size={18} color="#022c22" />
+              </Animated.View>
             )}
+          </Pressable>
+        </View>
+        
+        <Text style={styles.description} numberOfLines={2}>
+          {quest.description}
+        </Text>
+        
+        {/* Progress */}
+        {!isComplete && (
+          <View style={styles.progressSection}>
+            <View style={styles.progressLabelRow}>
+              <Text style={styles.progressLabel}>HP</Text>
+              <Text style={styles.progressValue}>{quest.progress}/{quest.target}</Text>
+            </View>
+            <RetroProgressBar 
+              current={quest.progress} 
+              max={quest.target} 
+              color={getDifficultyColor()} 
+            />
           </View>
+        )}
+        
+        {/* Dark Loot Section */}
+        <View style={styles.divider} />
+        <View style={styles.rewards}>
+          <Text style={styles.lootLabel}>LOOT</Text>
+          
+          <View style={[styles.rewardTag, { borderColor: PALETTE.slotBorder }]}>
+            <Text style={styles.rewardText}>XP +{quest.xpReward}</Text>
+          </View>
+          
+          <View style={[styles.rewardTag, { borderColor: PALETTE.neon.gold }]}>
+             <MaterialCommunityIcons name="gold" size={10} color={PALETTE.neon.gold} style={{marginRight:4}} />
+             <Text style={[styles.rewardText, { color: PALETTE.neon.gold }]}>{quest.goldReward}</Text>
+          </View>
+          
+          {quest.streak > 0 && (
+             <View style={[styles.rewardTag, { borderColor: PALETTE.neon.red }]}>
+               <MaterialCommunityIcons name="fire" size={10} color={PALETTE.neon.red} style={{marginRight:2}} />
+               <Text style={[styles.rewardText, { color: PALETTE.neon.red }]}>{quest.streak}</Text>
+             </View>
+          )}
         </View>
       </View>
     </AnimatedTouchable>
@@ -203,115 +220,175 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.md,
-    borderRadius: theme.borderRadius.xl,
-    overflow: 'hidden',
-    ...theme.shadows.md,
-  },
-  completedContainer: {
-    opacity: 0.8,
-  },
-  content: {
-    backgroundColor: theme.colors.background.card,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-    borderRadius: theme.borderRadius.xl,
-  },
-  completedContent: {
-    backgroundColor: theme.colors.quest.completed,
+    marginBottom: 16,
+    borderRadius: RETRO_RADIUS,
+    borderWidth: RETRO_BORDER_WIDTH,
+    // Background and border colors handled inline for state
   },
   contentInner: {
-    padding: theme.spacing.md,
+    padding: 14,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.sm,
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  iconContainer: {
-    width: 50,
-    height: 50,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.md,
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderWidth: 2,
+    borderRadius: RETRO_RADIUS,
+    backgroundColor: PALETTE.slotBg, // Dark slot for the icon
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-  },
-  icon: {
-    fontSize: 28,
+    marginRight: 12,
+    borderStyle: 'dashed',
   },
   headerInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   badges: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.xs,
+    alignItems: 'center',
+    marginBottom: 6,
   },
-  typeBadge: {
-    paddingHorizontal: theme.spacing.sm,
+  pixelBadge: {
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: theme.borderRadius.sm,
-    marginRight: theme.spacing.xs,
+    borderRadius: 2,
+    marginRight: 8,
   },
-  difficultyBadge: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 2,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.text.tertiary, // Fallback if getDifficultyColor logic is skipped in styling array
+  pixelBadgeText: {
+    color: '#000', // Black text on neon badge
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
-  badgeText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+  difficultyText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   title: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 18,
+    fontWeight: '800',
+    color: PALETTE.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  titleComplete: {
+    textDecorationLine: 'line-through',
+    color: PALETTE.neon.green,
+    opacity: 0.8,
   },
   checkbox: {
     width: 32,
     height: 32,
-    borderRadius: theme.borderRadius.md,
     borderWidth: 2,
-    borderColor: theme.colors.text.tertiary,
+    borderColor: PALETTE.slotBorder,
+    borderRadius: 4,
+    backgroundColor: PALETTE.slotBg, // Deep dark hole
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: theme.spacing.sm,
-  },
-  checkboxCompleted: {
-    backgroundColor: theme.colors.status.success,
-    borderColor: theme.colors.status.success,
+    marginLeft: 8,
+    // Simulating "Pressed in" depth
+    borderTopWidth: 4, 
+    borderBottomWidth: 0,
   },
   description: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 13,
+    color: PALETTE.textDim,
+    marginBottom: 16,
+    fontFamily: 'monospace',
     lineHeight: 18,
   },
-  progressBar: {
-    marginBottom: theme.spacing.sm,
+  // Retro Bar
+  progressSection: {
+    marginBottom: 14,
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  progressLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: PALETTE.textDim,
+    letterSpacing: 1,
+  },
+  progressValue: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: PALETTE.text,
+  },
+  retroProgressContainer: {
+    height: 16,
+    backgroundColor: PALETTE.slotBg,
+    borderWidth: 2,
+    borderColor: PALETTE.cardBorder,
+    borderRadius: 2,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  retroProgressFill: {
+    height: '100%',
+    borderRadius: 1,
+  },
+  retroProgressGlare: {
+    position: 'absolute',
+    top: 2,
+    left: 4,
+    right: 4,
+    height: 2,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 1,
+  },
+  gridTexture: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.1,
+    // If you had a grid image, this is where it goes. 
+    // For now, it's just a placeholder for texture depth.
+    backgroundColor: '#334155', 
+  },
+  // Loot
+  divider: {
+    height: 2,
+    backgroundColor: PALETTE.slotBorder,
+    marginBottom: 10,
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: PALETTE.cardBorder,
   },
   rewards: {
     flexDirection: 'row',
+    alignItems: 'center',
     flexWrap: 'wrap',
   },
-  reward: {
+  lootLabel: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: PALETTE.textDim,
+    marginRight: 8,
+  },
+  rewardTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.tertiary,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.full,
-    marginRight: theme.spacing.sm,
-    marginTop: theme.spacing.xs,
+    backgroundColor: PALETTE.slotBg,
+    borderWidth: 1,
+    borderColor: PALETTE.textDim,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginRight: 8,
   },
   rewardText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.secondary,
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: PALETTE.text,
   },
 });

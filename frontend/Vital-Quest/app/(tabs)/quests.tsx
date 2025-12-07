@@ -1,11 +1,28 @@
 import { QuestCard } from '@/components/game/QuestCard';
-import { theme } from '@/constants/theme';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// --- Retro Dark Palette ---
+const PALETTE = {
+  bg: '#0f172a',           // Deep Slate
+  surface: '#1e293b',      // Slate 800
+  surfaceHighlight: '#334155', 
+  text: '#f8fafc',
+  textDim: '#64748b',
+  accent: {
+    cyan: '#22d3ee',
+    green: '#4ade80',
+    purple: '#c084fc',
+    gold: '#fbbf24',
+    red: '#f87171',
+  }
+};
+
+const RETRO_BORDER = 2;
+const RETRO_DEPTH = 4;
 
 export default function QuestsScreen() {
   const activeQuests = useGameStore((state) => state.activeQuests);
@@ -26,282 +43,331 @@ export default function QuestsScreen() {
   
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-    <LinearGradient
-      colors={[theme.colors.background.primary, theme.colors.background.primary]}
-      style={styles.container}
-    >
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Quests</Text>
-          <Text style={styles.subtitle}>Complete quests to earn XP and gold!</Text>
-        </View>
-        
-        {/* Tab Selector */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'active' && styles.tabActive]}
-            onPress={() => setSelectedTab('active')}
-          >
-            <Text style={[styles.tabText, selectedTab === 'active' && styles.tabTextActive]}>
-              Active ({activeQuests.length})
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, selectedTab === 'completed' && styles.tabActive]}
-            onPress={() => setSelectedTab('completed')}
-          >
-            <Text style={[styles.tabText, selectedTab === 'completed' && styles.tabTextActive]}>
-              Completed ({completedQuests.length})
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        {selectedTab === 'active' ? (
-          <>
-            {/* Daily Quests */}
-            {dailyQuests.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <MaterialCommunityIcons name="calendar-clock" size={24} color={theme.colors.text.primary} style={styles.sectionIcon} />
-                  <Text style={styles.sectionTitle}>Daily Quests</Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{dailyQuests.length}</Text>
-                  </View>
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* --- Header --- */}
+          <View style={styles.header}>
+            <View style={styles.headerIconBox}>
+              <MaterialCommunityIcons name="radar" size={24} color={PALETTE.accent.green} />
+            </View>
+            <View>
+              <Text style={styles.title}>MISSION BOARD</Text>
+              <Text style={styles.subtitle}>SELECT OBJECTIVE &gt;&gt; EXECUTE</Text>
+            </View>
+          </View>
+          
+          {/* --- Retro Switch Tabs --- */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tab, 
+                selectedTab === 'active' && styles.tabActive
+              ]}
+              onPress={() => setSelectedTab('active')}
+              activeOpacity={0.9}
+            >
+              <View style={[styles.ledIndicator, selectedTab === 'active' && { backgroundColor: PALETTE.accent.green }]} />
+              <Text style={[styles.tabText, selectedTab === 'active' && styles.tabTextActive]}>
+                ACTIVE [{activeQuests.length}]
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.tab, 
+                selectedTab === 'completed' && styles.tabActive
+              ]}
+              onPress={() => setSelectedTab('completed')}
+              activeOpacity={0.9}
+            >
+              <View style={[styles.ledIndicator, selectedTab === 'completed' && { backgroundColor: PALETTE.accent.green }]} />
+              <Text style={[styles.tabText, selectedTab === 'completed' && styles.tabTextActive]}>
+                LOGS [{completedQuests.length}]
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {selectedTab === 'active' ? (
+            <>
+              {/* Daily Quests */}
+              {dailyQuests.length > 0 && (
+                <View style={styles.section}>
+                  <SectionHeader title="DAILY_PROTOCOLS" count={dailyQuests.length} color={PALETTE.accent.cyan} />
+                  {dailyQuests.map((quest) => (
+                    <QuestCard
+                      key={quest.id}
+                      quest={quest}
+                      onComplete={() => handleQuestComplete(quest.id)}
+                    />
+                  ))}
                 </View>
-                {dailyQuests.map((quest) => (
-                  <QuestCard
-                    key={quest.id}
-                    quest={quest}
-                    onComplete={() => handleQuestComplete(quest.id)}
-                  />
-                ))}
-              </View>
-            )}
-            
-            {/* Weekly Quests */}
-            {weeklyQuests.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <MaterialCommunityIcons name="calendar-week" size={24} color={theme.colors.text.primary} style={styles.sectionIcon} />
-                  <Text style={styles.sectionTitle}>Weekly Challenges</Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{weeklyQuests.length}</Text>
-                  </View>
+              )}
+              
+              {/* Weekly Quests */}
+              {weeklyQuests.length > 0 && (
+                <View style={styles.section}>
+                  <SectionHeader title="WEEKLY_OPS" count={weeklyQuests.length} color={PALETTE.accent.purple} />
+                  {weeklyQuests.map((quest) => (
+                    <QuestCard
+                      key={quest.id}
+                      quest={quest}
+                      onComplete={() => handleQuestComplete(quest.id)}
+                    />
+                  ))}
                 </View>
-                {weeklyQuests.map((quest) => (
-                  <QuestCard
-                    key={quest.id}
-                    quest={quest}
-                    onComplete={() => handleQuestComplete(quest.id)}
-                  />
-                ))}
-              </View>
-            )}
-            
-            {/* Custom Quests */}
-            {customQuests.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <MaterialCommunityIcons name="star" size={24} color={theme.colors.accent.gold} style={styles.sectionIcon} />
-                  <Text style={styles.sectionTitle}>Custom Goals</Text>
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{customQuests.length}</Text>
-                  </View>
+              )}
+              
+              {/* Custom Quests */}
+              {customQuests.length > 0 && (
+                <View style={styles.section}>
+                  <SectionHeader title="CUSTOM_GOALS" count={customQuests.length} color={PALETTE.accent.gold} />
+                  {customQuests.map((quest) => (
+                    <QuestCard
+                      key={quest.id}
+                      quest={quest}
+                      onComplete={() => handleQuestComplete(quest.id)}
+                    />
+                  ))}
                 </View>
-                {customQuests.map((quest) => (
-                  <QuestCard
-                    key={quest.id}
-                    quest={quest}
-                    onComplete={() => handleQuestComplete(quest.id)}
-                  />
-                ))}
-              </View>
-            )}
-            
-            {activeQuests.length === 0 && (
-              <View style={styles.emptyContainer}>
-                <MaterialCommunityIcons name="party-popper" size={64} color={theme.colors.text.tertiary} style={{ marginBottom: 16 }} />
-                <Text style={styles.emptyTitle}>All Caught Up!</Text>
-                <Text style={styles.emptyText}>
-                  You've completed all your quests. New daily quests will appear tomorrow!
-                </Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <>
-            {/* Completed Quests */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <MaterialCommunityIcons name="check-circle" size={24} color={theme.colors.stats.xp} style={styles.sectionIcon} />
-                <Text style={styles.sectionTitle}>Recently Completed</Text>
-              </View>
-              {recentCompleted.length > 0 ? (
-                recentCompleted.map((quest) => (
-                  <QuestCard key={quest.id} quest={quest} />
-                ))
-              ) : (
+              )}
+              
+              {activeQuests.length === 0 && (
                 <View style={styles.emptyContainer}>
-                  <MaterialCommunityIcons name="script-text-outline" size={64} color={theme.colors.text.tertiary} style={{ marginBottom: 16 }} />
-                  <Text style={styles.emptyTitle}>No Completed Quests Yet</Text>
+                  <MaterialCommunityIcons name="check-all" size={64} color={PALETTE.surfaceHighlight} style={{ marginBottom: 16 }} />
+                  <Text style={styles.emptyTitle}>SYSTEM IDLE</Text>
                   <Text style={styles.emptyText}>
-                    Start completing quests to build your achievement history!
+                    ALL OBJECTIVES CLEARED.{"\n"}AWAITING NEW ORDERS...
                   </Text>
                 </View>
               )}
+            </>
+          ) : (
+            <>
+              {/* Completed Quests */}
+              <View style={styles.section}>
+                <SectionHeader title="MISSION_ARCHIVE" color={PALETTE.textDim} />
+                {recentCompleted.length > 0 ? (
+                  recentCompleted.map((quest) => (
+                    <QuestCard key={quest.id} quest={quest} />
+                  ))
+                ) : (
+                  <View style={styles.emptyContainer}>
+                    <MaterialCommunityIcons name="folder-remove-outline" size={64} color={PALETTE.surfaceHighlight} style={{ marginBottom: 16 }} />
+                    <Text style={styles.emptyTitle}>ARCHIVE EMPTY</Text>
+                    <Text style={styles.emptyText}>
+                      NO COMPLETED MISSIONS FOUND.
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </>
+          )}
+          
+          {/* --- Retro Create Button --- */}
+          <TouchableOpacity style={styles.createButton} activeOpacity={0.8}>
+            <View style={styles.createBtnContent}>
+              <MaterialCommunityIcons name="plus-thick" size={20} color={PALETTE.bg} style={{ marginRight: 8 }} />
+              <Text style={styles.createText}>INITIATE NEW QUEST</Text>
             </View>
-          </>
-        )}
-        
-        {/* Create Quest Button */}
-        <TouchableOpacity style={styles.createButton}>
-          <LinearGradient
-            colors={theme.colors.gradients.primary}
-            style={styles.createGradient}
-          >
-            <MaterialCommunityIcons name="plus" size={24} color={theme.colors.text.primary} style={{ marginRight: 8 }} />
-            <Text style={styles.createText}>Create Custom Quest</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </ScrollView>
-    </LinearGradient>
+          </TouchableOpacity>
+          
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
+// Helper for Headers
+const SectionHeader = ({ title, count, color = PALETTE.text }: any) => (
+  <View style={styles.sectionHeader}>
+    <Text style={[styles.sectionTitle, { color }]}>// {title}</Text>
+    {count !== undefined && (
+      <View style={[styles.badge, { borderColor: color }]}>
+        <Text style={[styles.badgeText, { color }]}>{count < 10 ? `0${count}` : count}</Text>
+      </View>
+    )}
+    <View style={[styles.headerLine, { backgroundColor: color, opacity: 0.3 }]} />
+  </View>
+);
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: PALETTE.bg,
   },
   container: {
     flex: 1,
+    backgroundColor: PALETTE.bg,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: theme.spacing.lg,
+    padding: 16,
+    paddingBottom: 100, // Space for create button
   },
+  
+  // --- Header ---
   header: {
-    marginBottom: theme.spacing.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: PALETTE.surfaceHighlight,
+    paddingBottom: 16,
+    borderStyle: 'dashed',
+  },
+  headerIconBox: {
+    width: 48,
+    height: 48,
+    backgroundColor: PALETTE.surface,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderRadius: 4,
   },
   title: {
-    fontSize: theme.typography.fontSize['4xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 24,
+    fontWeight: '900',
+    color: PALETTE.text,
+    letterSpacing: 1,
+    fontFamily: 'monospace', // Or system monospace
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
+    fontSize: 10,
+    color: PALETTE.accent.green,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
+
+  // --- Tabs ---
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xs,
-    marginBottom: theme.spacing.xl,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
+    gap: 12,
+    marginBottom: 24,
   },
   tab: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    backgroundColor: PALETTE.surface,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    // 3D effect
+    borderBottomWidth: 4,
   },
   tabActive: {
-    backgroundColor: theme.colors.primary.main,
+    borderColor: PALETTE.accent.green,
+    backgroundColor: '#064e3b', // Dark green bg
+    borderBottomColor: '#064e3b',
+    borderBottomWidth: 1,
+    marginTop: 3, // Push down effect
+  },
+  ledIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#334155', // Off state
+    marginRight: 8,
   },
   tabText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: PALETTE.textDim,
+    letterSpacing: 0.5,
   },
   tabTextActive: {
-    color: theme.colors.text.primary,
+    color: PALETTE.accent.green,
   },
+
+  // --- Sections ---
   section: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 24,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  sectionIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.sm,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    flex: 1,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
+    marginRight: 8,
   },
   badge: {
-    backgroundColor: theme.colors.primary.main,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.full,
-    minWidth: 28,
-    alignItems: 'center',
+    borderWidth: 1,
+    paddingHorizontal: 4,
+    borderRadius: 2,
+    marginRight: 8,
   },
   badgeText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
+  headerLine: {
+    flex: 1,
+    height: 1,
+  },
+
+  // --- Empty States ---
   emptyContainer: {
     alignItems: 'center',
-    padding: theme.spacing['3xl'],
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: theme.spacing.md,
+    padding: 40,
+    borderWidth: 2,
+    borderColor: PALETTE.surfaceHighlight,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    backgroundColor: 'rgba(30, 41, 59, 0.5)',
   },
   emptyTitle: {
-    fontSize: theme.typography.fontSize.xl,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    fontSize: 16,
+    fontWeight: '900',
+    color: PALETTE.textDim,
+    marginBottom: 8,
+    letterSpacing: 2,
   },
   emptyText: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.tertiary,
+    fontSize: 12,
+    color: PALETTE.surfaceHighlight,
     textAlign: 'center',
-    lineHeight: 22,
+    fontFamily: 'monospace',
+    lineHeight: 18,
   },
+
+  // --- Create Button ---
   createButton: {
-    marginTop: theme.spacing.md,
-    borderRadius: theme.borderRadius.xl,
-    overflow: 'hidden',
-    ...theme.shadows.md,
+    marginTop: 12,
+    backgroundColor: PALETTE.accent.green,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#bbf7d0', // Lighter green border
+    // 3D Pop
+    borderBottomWidth: 6,
+    borderBottomColor: '#15803d', // Dark green shadow
+    marginBottom: 20,
   },
-  createGradient: {
+  createBtnContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: theme.spacing.lg,
-    borderWidth: 2,
-    borderColor: theme.colors.primary.light,
-    borderRadius: theme.borderRadius.xl,
-  },
-  createIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.sm,
+    paddingVertical: 14,
   },
   createText: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 14,
+    fontWeight: '900',
+    color: PALETTE.bg, // Dark text on bright button
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
 });

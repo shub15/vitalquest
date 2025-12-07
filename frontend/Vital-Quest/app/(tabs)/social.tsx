@@ -1,13 +1,30 @@
 import { Leaderboard } from '@/components/social/Leaderboard';
-import { theme } from '@/constants/theme';
 import { generateMockLeaderboard, mockFriends, mockPendingRequests } from '@/services/mockSocialData';
 import { useGameStore } from '@/store/gameStore';
 import { useSocialStore } from '@/store/socialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// --- Retro Network Palette ---
+const PALETTE = {
+  bg: '#0f172a',           // Deep Slate (Screen Background)
+  surface: '#1e293b',      // Slate 800 (Card Surface)
+  surfaceHighlight: '#334155', 
+  slot: '#020617',         // Black/Void
+  text: '#f8fafc',
+  textDim: '#64748b',
+  accent: {
+    gold: '#fbbf24',
+    green: '#4ade80',     // Online / Accept
+    red: '#f87171',       // Reject / Offline
+    cyan: '#22d3ee',      // XP / Data
+    purple: '#c084fc'
+  }
+};
+
+const RETRO_BORDER = 2;
 
 export default function SocialScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly');
@@ -36,102 +53,114 @@ export default function SocialScreen() {
   if (!user) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
+        <ActivityIndicator size="large" color={PALETTE.accent.gold} />
+        <Text style={styles.loadingText}>CONNECTING TO NETWORK...</Text>
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <LinearGradient
-        colors={[theme.colors.background.primary, theme.colors.background.primary]}
-        style={styles.container}
-      >
-        {/* Header */}
+      <View style={styles.container}>
+        
+        {/* --- Network Header --- */}
         <View style={styles.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <MaterialCommunityIcons name="trophy" size={32} color={theme.colors.accent.gold} style={{ marginRight: 8 }} />
-            <Text style={styles.title}>Social</Text>
+          <View style={styles.headerIconBox}>
+            <MaterialCommunityIcons name="earth" size={24} color={PALETTE.accent.cyan} />
           </View>
-          <Text style={styles.subtitle}>Compete and connect with others</Text>
+          <View>
+            <Text style={styles.title}>GLOBAL_NET</Text>
+            <Text style={styles.subtitle}>UPLINK ESTABLISHED. USER: {user.username.toUpperCase()}</Text>
+          </View>
         </View>
 
-        {/* Tab Selector */}
+        {/* --- Main Switch Tabs --- */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'leaderboard' && styles.activeTab]}
+            style={[styles.tab, selectedTab === 'leaderboard' && styles.tabActive]}
             onPress={() => setSelectedTab('leaderboard')}
+            activeOpacity={0.9}
           >
-            <Text style={[styles.tabText, selectedTab === 'leaderboard' && styles.activeTabText]}>
-              Leaderboard
+             <MaterialCommunityIcons 
+                name="trophy-variant" 
+                size={16} 
+                color={selectedTab === 'leaderboard' ? PALETTE.bg : PALETTE.textDim} 
+                style={{marginRight: 6}}
+             />
+            <Text style={[styles.tabText, selectedTab === 'leaderboard' && styles.tabTextActive]}>
+              RANKINGS
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, selectedTab === 'friends' && styles.activeTab]}
+            style={[styles.tab, selectedTab === 'friends' && styles.tabActive]}
             onPress={() => setSelectedTab('friends')}
+            activeOpacity={0.9}
           >
-            <Text style={[styles.tabText, selectedTab === 'friends' && styles.activeTabText]}>
-              Friends ({friends.length})
+             <MaterialCommunityIcons 
+                name="account-group" 
+                size={16} 
+                color={selectedTab === 'friends' ? PALETTE.bg : PALETTE.textDim} 
+                style={{marginRight: 6}}
+             />
+            <Text style={[styles.tabText, selectedTab === 'friends' && styles.tabTextActive]}>
+              ALLIES ({friends.length})
             </Text>
           </TouchableOpacity>
         </View>
 
         {selectedTab === 'leaderboard' ? (
           <>
-            {/* Period Selector */}
+            {/* --- Time Period Selector --- */}
             <View style={styles.periodContainer}>
-              <TouchableOpacity
-                style={[styles.periodButton, selectedPeriod === 'weekly' && styles.activePeriod]}
-                onPress={() => setSelectedPeriod('weekly')}
-              >
-                <Text style={[styles.periodText, selectedPeriod === 'weekly' && styles.activePeriodText]}>
-                  Weekly
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.periodButton, selectedPeriod === 'monthly' && styles.activePeriod]}
-                onPress={() => setSelectedPeriod('monthly')}
-              >
-                <Text style={[styles.periodText, selectedPeriod === 'monthly' && styles.activePeriodText]}>
-                  Monthly
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.periodButton, selectedPeriod === 'alltime' && styles.activePeriod]}
-                onPress={() => setSelectedPeriod('alltime')}
-              >
-                <Text style={[styles.periodText, selectedPeriod === 'alltime' && styles.activePeriodText]}>
-                  All Time
-                </Text>
-              </TouchableOpacity>
+              <PeriodButton 
+                label="WEEKLY" 
+                active={selectedPeriod === 'weekly'} 
+                onPress={() => setSelectedPeriod('weekly')} 
+              />
+              <PeriodButton 
+                label="MONTHLY" 
+                active={selectedPeriod === 'monthly'} 
+                onPress={() => setSelectedPeriod('monthly')} 
+              />
+              <PeriodButton 
+                label="ALL-TIME" 
+                active={selectedPeriod === 'alltime'} 
+                onPress={() => setSelectedPeriod('alltime')} 
+              />
             </View>
 
-            {/* Leaderboard */}
-            <Leaderboard entries={leaderboard} period={selectedPeriod} />
+            {/* --- Leaderboard Data Feed --- */}
+            <View style={styles.leaderboardFrame}>
+              <Leaderboard entries={leaderboard} period={selectedPeriod} />
+            </View>
           </>
         ) : (
           <ScrollView style={styles.friendsContainer} showsVerticalScrollIndicator={false}>
-            {/* Pending Requests */}
+            
+            {/* --- Pending Requests --- */}
             {mockPendingRequests.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Pending Requests ({mockPendingRequests.length})</Text>
+                <SectionHeader title="INCOMING_REQUESTS" count={mockPendingRequests.length} color={PALETTE.accent.gold} />
+                
                 {mockPendingRequests.map(request => (
-                  <View key={request.id} style={styles.friendCard}>
-                    <View style={[styles.friendAvatar, { backgroundColor: request.avatarColor }]}>
-                      <Text style={styles.friendAvatarText}>
+                  <View key={request.id} style={[styles.friendCard, { borderColor: PALETTE.accent.gold }]}>
+                    <View style={[styles.avatarFrame, { borderColor: request.avatarColor }]}>
+                      <Text style={[styles.avatarText, { color: request.avatarColor }]}>
                         {request.username.substring(0, 2).toUpperCase()}
                       </Text>
                     </View>
+                    
                     <View style={styles.friendInfo}>
                       <Text style={styles.friendName}>{request.username}</Text>
-                      <Text style={styles.friendStats}>Level {request.level} • {request.totalXp.toLocaleString()} XP</Text>
+                      <Text style={styles.friendStats}>LVL.{request.level} // {request.totalXp} XP</Text>
                     </View>
+                    
                     <View style={styles.requestButtons}>
-                      <TouchableOpacity style={styles.acceptButton}>
-                        <MaterialCommunityIcons name="check" size={20} color={theme.colors.text.primary} />
+                      <TouchableOpacity style={[styles.actionBtn, styles.acceptBtn]}>
+                        <MaterialCommunityIcons name="check" size={16} color={PALETTE.bg} />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.rejectButton}>
-                        <MaterialCommunityIcons name="close" size={20} color={theme.colors.text.primary} />
+                      <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]}>
+                        <MaterialCommunityIcons name="close" size={16} color={PALETTE.bg} />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -139,244 +168,336 @@ export default function SocialScreen() {
               </View>
             )}
 
-            {/* Friends List */}
+            {/* --- Friends List --- */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>My Friends ({friends.length})</Text>
+              <SectionHeader title="ALLIED_OPERATIVES" count={friends.length} color={PALETTE.accent.cyan} />
+              
               {friends.map(friend => (
                 <View key={friend.id} style={styles.friendCard}>
-                  <View style={[styles.friendAvatar, { backgroundColor: friend.avatarColor }]}>
-                    <Text style={styles.friendAvatarText}>
+                  <View style={[styles.avatarFrame, { borderColor: friend.avatarColor }]}>
+                    <Text style={[styles.avatarText, { color: friend.avatarColor }]}>
                       {friend.username.substring(0, 2).toUpperCase()}
                     </Text>
-                    <View style={[styles.statusDot, friend.status === 'online' && styles.onlineStatus]} />
+                    {/* Status Dot */}
+                    <View style={[
+                      styles.statusDot, 
+                      { backgroundColor: friend.status === 'online' ? PALETTE.accent.green : PALETTE.textDim }
+                    ]} />
                   </View>
+                  
                   <View style={styles.friendInfo}>
                     <Text style={styles.friendName}>{friend.username}</Text>
-                    <Text style={styles.friendStats}>
-                      Level {friend.level} • {friend.totalXp.toLocaleString()} XP • {friend.currentStreak}🔥
-                    </Text>
+                    <View style={styles.statsRow}>
+                      <Text style={styles.friendStats}>LVL.{friend.level} • {friend.currentStreak}</Text>
+                      <MaterialCommunityIcons name="fire" size={12} color={PALETTE.accent.gold} />
+                    </View>
                   </View>
+                  
                   <TouchableOpacity style={styles.viewButton}>
-                    <Text style={styles.viewButtonText}>View</Text>
+                    <Text style={styles.viewButtonText}>DATA</Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
 
-            {/* Demo Notice */}
+            {/* --- System Footer --- */}
             <View style={styles.demoNotice}>
-              <MaterialCommunityIcons name="gamepad-variant" size={20} color={theme.colors.text.secondary} style={{ marginRight: 8 }} />
-              <Text style={styles.demoText}>
-                Demo Mode: Social features use mock data for demonstration
-              </Text>
+              <Text style={styles.demoText}>// SYSTEM_NOTICE: SIMULATION_MODE_ACTIVE</Text>
+              <Text style={styles.demoSubText}>Social feeds are currently using mock data protocol.</Text>
             </View>
           </ScrollView>
         )}
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
 
+// --- Helper Components ---
+
+const PeriodButton = ({ label, active, onPress }: any) => (
+  <TouchableOpacity
+    style={[styles.periodButton, active && styles.activePeriod]}
+    onPress={onPress}
+  >
+    <Text style={[styles.periodText, active && styles.activePeriodText]}>
+      {label}
+    </Text>
+  </TouchableOpacity>
+);
+
+const SectionHeader = ({ title, count, color = PALETTE.text }: any) => (
+  <View style={styles.sectionHeader}>
+    <Text style={[styles.sectionTitle, { color }]}>&gt; {title}</Text>
+    <View style={styles.headerLine} />
+    <Text style={[styles.sectionCount, { color }]}>[{count}]</Text>
+  </View>
+);
+
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: PALETTE.bg,
   },
   container: {
     flex: 1,
-    padding: theme.spacing.lg,
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: PALETTE.bg,
   },
   loadingText: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.secondary,
+    marginTop: 12,
+    fontSize: 12,
+    fontFamily: 'monospace',
+    color: PALETTE.accent.gold,
+    letterSpacing: 1,
   },
+
+  // --- Header ---
   header: {
-    marginBottom: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: PALETTE.surfaceHighlight,
+    borderStyle: 'dashed',
+  },
+  headerIconBox: {
+    width: 44,
+    height: 44,
+    backgroundColor: PALETTE.slot,
+    borderWidth: 1,
+    borderColor: PALETTE.accent.cyan,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    borderRadius: 4,
   },
   title: {
-    fontSize: theme.typography.fontSize['3xl'],
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 20,
+    fontWeight: '900',
+    color: PALETTE.text,
+    letterSpacing: 2,
+    fontFamily: 'monospace',
   },
   subtitle: {
-    fontSize: theme.typography.fontSize.base,
-    color: theme.colors.text.secondary,
+    fontSize: 9,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
+    marginTop: 2,
   },
+
+  // --- Tabs ---
   tabContainer: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xs,
+    marginBottom: 20,
+    backgroundColor: PALETTE.slot,
+    padding: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
   },
   tab: {
     flex: 1,
-    paddingVertical: theme.spacing.sm,
+    flexDirection: 'row',
+    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 2,
   },
-  activeTab: {
-    backgroundColor: theme.colors.primary.main,
+  tabActive: {
+    backgroundColor: PALETTE.accent.gold,
   },
   tabText: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '900',
+    color: PALETTE.textDim,
+    letterSpacing: 0.5,
   },
-  activeTabText: {
-    color: theme.colors.text.primary,
+  tabTextActive: {
+    color: PALETTE.bg, // Dark text on bright tab
   },
+
+  // --- Period Selector ---
   periodContainer: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.lg,
-    gap: theme.spacing.sm,
+    marginBottom: 16,
+    gap: 8,
   },
   periodButton: {
     flex: 1,
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: 6,
     alignItems: 'center',
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.background.card,
+    backgroundColor: PALETTE.surface,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 2,
   },
   activePeriod: {
-    backgroundColor: theme.colors.primary.dark,
-    borderColor: theme.colors.primary.light,
+    backgroundColor: PALETTE.surfaceHighlight,
+    borderColor: PALETTE.accent.cyan,
   },
   periodText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.tertiary,
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: PALETTE.textDim,
   },
   activePeriodText: {
-    color: theme.colors.text.primary,
+    color: PALETTE.accent.cyan,
   },
+
+  // --- Leaderboard Frame ---
+  leaderboardFrame: {
+    flex: 1,
+    backgroundColor: PALETTE.slot,
+    borderWidth: 1,
+    borderColor: PALETTE.surfaceHighlight,
+    borderRadius: 4,
+    // Note: The internal Leaderboard component would ideally also need
+    // refactoring to match this theme, but this frame helps integrate it.
+  },
+
+  // --- Friends List ---
   friendsContainer: {
     flex: 1,
   },
   section: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
+    fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 1,
+    fontFamily: 'monospace',
   },
+  headerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: PALETTE.surfaceHighlight,
+    marginHorizontal: 8,
+  },
+  sectionCount: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+  },
+
+  // --- Friend Card ---
   friendCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.background.card,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
+    backgroundColor: PALETTE.surface,
+    padding: 10,
+    borderRadius: 2,
     borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
-    marginBottom: theme.spacing.sm,
+    borderColor: PALETTE.surfaceHighlight,
+    borderLeftWidth: 4, // Accent stripe on left
+    borderLeftColor: PALETTE.surfaceHighlight, // Default, overridden if online logic used
+    marginBottom: 8,
   },
-  friendAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  avatarFrame: {
+    width: 42,
+    height: 42,
+    borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: theme.spacing.md,
+    marginRight: 12,
+    backgroundColor: PALETTE.slot,
     position: 'relative',
   },
-  friendAvatarText: {
-    fontSize: theme.typography.fontSize.lg,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '900',
   },
   statusDot: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: theme.colors.text.disabled,
-    borderWidth: 2,
-    borderColor: theme.colors.background.card,
-  },
-  onlineStatus: {
-    backgroundColor: theme.colors.stats.xp,
+    bottom: -4,
+    right: -4,
+    width: 10,
+    height: 10,
+    borderWidth: 1,
+    borderColor: '#000',
   },
   friendInfo: {
     flex: 1,
   },
   friendName: {
-    fontSize: theme.typography.fontSize.base,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.xs,
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: PALETTE.text,
+    fontFamily: 'monospace',
+    marginBottom: 2,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   friendStats: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.tertiary,
+    fontSize: 10,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
   },
+  
+  // --- Actions ---
   requestButtons: {
     flexDirection: 'row',
-    gap: theme.spacing.sm,
+    gap: 8,
   },
-  acceptButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: theme.colors.stats.xp,
+  actionBtn: {
+    width: 28,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 2,
   },
-  acceptButtonText: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.primary,
+  acceptBtn: {
+    backgroundColor: PALETTE.accent.green,
   },
-  rejectButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: theme.colors.stats.hp,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rejectButtonText: {
-    fontSize: theme.typography.fontSize.lg,
-    color: theme.colors.text.primary,
+  rejectBtn: {
+    backgroundColor: PALETTE.accent.red,
   },
   viewButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    backgroundColor: theme.colors.primary.dark,
-    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: PALETTE.textDim,
+    borderRadius: 2,
   },
   viewButtonText: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.semibold,
-    color: theme.colors.text.primary,
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: PALETTE.textDim,
   },
+
+  // --- Footer ---
   demoNotice: {
-    flexDirection: 'row',
+    marginTop: 20,
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: PALETTE.surfaceHighlight,
+    borderStyle: 'dashed',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.background.tertiary,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.primary.dark,
-    marginTop: theme.spacing.lg,
+    opacity: 0.6,
   },
   demoText: {
-    fontSize: theme.typography.fontSize.sm,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
+    fontSize: 10,
+    color: PALETTE.accent.gold,
+    fontFamily: 'monospace',
+    marginBottom: 4,
+  },
+  demoSubText: {
+    fontSize: 10,
+    color: PALETTE.textDim,
   },
 });

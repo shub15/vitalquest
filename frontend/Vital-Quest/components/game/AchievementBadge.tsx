@@ -1,5 +1,5 @@
-import { theme } from '@/constants/theme';
 import { Achievement } from '@/types';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -8,7 +8,52 @@ import Animated, {
   withSequence,
   withSpring,
   withTiming,
+  withRepeat,
 } from 'react-native-reanimated';
+
+// --- Retro Palette ---
+const PALETTE = {
+  bg: '#0f172a',           // Deep Slate
+  slot: '#020617',         // Black/Void
+  surface: '#1e293b',      // Card Surface
+  text: '#f8fafc',
+  textDim: '#64748b',
+  rarity: {
+    common: '#94a3b8',     // Gray
+    uncommon: '#4ade80',   // Green
+    rare: '#22d3ee',       // Blue
+    epic: '#c084fc',       // Purple
+    legendary: '#fbbf24',  // Gold
+  }
+};
+
+// --- Icon Mapping Helper ---
+// Maps emojis from your database to MaterialCommunityIcon names
+const getIconName = (emojiOrName: string): any => {
+  const map: Record<string, string> = {
+    '🏆': 'trophy',
+    '🔥': 'fire',
+    '⚡': 'flash',
+    '💪': 'arm-flex',
+    '✨': 'star-four-points',
+    '💧': 'water',
+    '🧘': 'meditation',
+    '😴': 'power-sleep',
+    '👟': 'shoe-print',
+    '👣': 'shoe-print',
+    '🍎': 'food-apple',
+    '🍽️': 'silverware-fork-knife',
+    '🎉': 'party-popper',
+    '💰': 'hand-coin',
+    '⚔️': 'sword',
+    '🛡️': 'shield',
+    '🎯': 'target',
+    '🔒': 'lock',
+  };
+  
+  // Return the mapped icon, or fallback to 'trophy-variant' if not found
+  return map[emojiOrName] || 'trophy-variant';
+};
 
 interface AchievementBadgeProps {
   achievement: Achievement;
@@ -19,224 +64,246 @@ const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const AchievementBadge: React.FC<AchievementBadgeProps> = ({ achievement, onPress }) => {
   const scale = useSharedValue(1);
-  const shine = useSharedValue(0);
-  
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-  
-  const shineStyle = useAnimatedStyle(() => ({
-    opacity: shine.value,
-  }));
-  
+  const glowOpacity = useSharedValue(0);
+
+  // Unlocked flash animation
   React.useEffect(() => {
     if (achievement.unlocked) {
-      shine.value = withSequence(
-        withTiming(0.8, { duration: 500 }),
-        withTiming(0, { duration: 500 })
+      glowOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.6, { duration: 1000 }),
+          withTiming(0.2, { duration: 1000 })
+        ),
+        -1,
+        true
       );
     }
   }, [achievement.unlocked]);
-  
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
+  }));
+
   const handlePress = () => {
     scale.value = withSequence(
-      withTiming(0.9, { duration: 100 }),
-      withSpring(1, { damping: 10 })
+      withTiming(0.95, { duration: 100 }),
+      withSpring(1, { damping: 12, stiffness: 200 })
     );
-    
     if (onPress) {
       setTimeout(() => onPress(), 100);
     }
   };
-  
+
   const getRarityColor = () => {
     switch (achievement.rarity) {
-      case 'common':
-        return theme.colors.rarity.common;
-      case 'uncommon':
-        return theme.colors.rarity.uncommon;
-      case 'rare':
-        return theme.colors.rarity.rare;
-      case 'epic':
-        return theme.colors.rarity.epic;
-      case 'legendary':
-        return theme.colors.rarity.legendary;
-      default:
-        return theme.colors.text.tertiary;
+      case 'common': return PALETTE.rarity.common;
+      case 'uncommon': return PALETTE.rarity.uncommon;
+      case 'rare': return PALETTE.rarity.rare;
+      case 'epic': return PALETTE.rarity.epic;
+      case 'legendary': return PALETTE.rarity.legendary;
+      default: return PALETTE.textDim;
     }
   };
-  
-  const getRarityGradient = (): readonly string[] => {
-    switch (achievement.rarity) {
-      case 'legendary':
-        return theme.colors.gradients.legendary;
-      case 'epic':
-        return theme.colors.gradients.primary;
-      case 'rare':
-        return ['#3B82F6', '#60A5FA'] as const;
-      case 'uncommon':
-        return theme.colors.gradients.xp;
-      default:
-        return ['#6B7280', '#9CA3AF'] as const;
-    }
-  };
-  
+
+  const color = getRarityColor();
   const progress = achievement.target > 0 ? (achievement.progress / achievement.target) * 100 : 0;
-  
+  const isHidden = achievement.hidden && !achievement.unlocked;
+
+  // Determine Icon and Color
+  const iconName = achievement.unlocked ? getIconName(achievement.icon) : 'lock';
+  const iconColor = achievement.unlocked ? color : PALETTE.textDim;
+
   return (
     <AnimatedTouchable
-      style={[styles.container, animatedStyle, !achievement.unlocked && styles.locked]}
+      style={[
+        styles.container, 
+        animatedStyle,
+        { borderColor: achievement.unlocked ? color : PALETTE.textDim }
+      ]}
       onPress={handlePress}
-      activeOpacity={0.8}
+      activeOpacity={0.9}
     >
+      {/* Background Glow for Unlocked Items */}
+      {achievement.unlocked && (
+        <Animated.View style={[styles.glowBackground, { backgroundColor: color }, glowStyle]} />
+      )}
+
+      {/* Rarity Tag (Top Right) */}
+      <View style={[styles.rarityTag, { backgroundColor: achievement.unlocked ? color : PALETTE.surface }]}>
+        <Text style={[
+          styles.rarityText, 
+          { color: achievement.unlocked ? PALETTE.bg : PALETTE.textDim }
+        ]}>
+          {achievement.rarity.toUpperCase()}
+        </Text>
+      </View>
+
+      {/* Icon Frame */}
       <View style={[
-        styles.content,
-        achievement.unlocked && { backgroundColor: getRarityColor() }
+        styles.iconFrame, 
+        { borderColor: achievement.unlocked ? color : PALETTE.textDim }
       ]}>
-        {/* Shine Effect */}
-        {achievement.unlocked && (
-          <Animated.View style={[styles.shine, shineStyle]} />
-        )}
-        
-        {/* Icon */}
-        <View style={[styles.iconContainer, { borderColor: getRarityColor() }]}>
-          <Text style={[styles.icon, !achievement.unlocked && styles.iconLocked]}>
-            {achievement.unlocked ? achievement.icon : '🔒'}
-          </Text>
-        </View>
-        
-        {/* Title */}
-        <Text
-          style={[styles.title, !achievement.unlocked && styles.textLocked]}
+        <MaterialCommunityIcons 
+          name={iconName} 
+          size={24} 
+          color={iconColor} 
+        />
+        {/* Scanline Effect */}
+        <View style={styles.scanline} />
+      </View>
+
+      {/* Info Section */}
+      <View style={styles.infoContainer}>
+        <Text 
+          style={[styles.title, !achievement.unlocked && styles.textLocked]} 
           numberOfLines={2}
         >
-          {achievement.hidden && !achievement.unlocked ? '???' : achievement.title}
+          {isHidden ? 'ENCRYPTED DATA' : achievement.title}
         </Text>
-        
-        {/* Progress or Unlocked Status */}
+
+        {/* State Display */}
         {achievement.unlocked ? (
-          <View style={styles.unlockedBadge}>
-            <Text style={styles.unlockedText}>✓ UNLOCKED</Text>
+          <View style={[styles.statusBadge, { borderColor: color }]}>
+            <Text style={[styles.statusText, { color: color }]}>UNLOCKED</Text>
           </View>
         ) : (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} />
+          <View style={styles.progressSection}>
+            <View style={styles.retroProgressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${Math.min(progress, 100)}%`, backgroundColor: color }
+                ]} 
+              />
             </View>
             <Text style={styles.progressText}>
-              {achievement.progress} / {achievement.target}
+              {achievement.progress}/{achievement.target}
             </Text>
           </View>
         )}
-        
-        {/* Rarity Badge */}
-        <View style={[styles.rarityBadge, { backgroundColor: getRarityColor() }]}>
-          <Text style={styles.rarityText}>{achievement.rarity.toUpperCase()}</Text>
-        </View>
       </View>
+
     </AnimatedTouchable>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: '48%',
-    aspectRatio: 0.85,
-    marginBottom: theme.spacing.md,
-    borderRadius: theme.borderRadius.xl,
-    overflow: 'hidden',
-    ...theme.shadows.md,
-  },
-  locked: {
-    opacity: 0.6,
-  },
-  content: {
-    flex: 1,
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.background.tertiary,
-    borderWidth: 1,
-    borderColor: theme.colors.border.subtle,
-    borderRadius: theme.borderRadius.xl,
+    width: '48%', // Fits 2 columns
+    backgroundColor: PALETTE.slot,
+    borderWidth: 2,
+    borderRadius: 6,
+    borderBottomWidth: 5, // Cartridge depth
+    padding: 10,
+    marginBottom: 16,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden',
   },
-  shine: {
+  glowBackground: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.1,
+  },
+  
+  // Rarity Tag
+  rarityTag: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 2,
+    zIndex: 10,
+  },
+  rarityText: {
+    fontSize: 8,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+
+  // Icon Area
+  iconFrame: {
+    width: 48,
+    height: 48,
+    borderWidth: 2,
+    borderRadius: 4,
+    backgroundColor: PALETTE.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 12,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  // 'icon' style removed as we are using the component props directly
+  scanline: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: '#FFFFFF',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    zIndex: 5,
   },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.background.tertiary,
-    justifyContent: 'center',
+
+  // Info Area
+  infoContainer: {
+    width: '100%',
     alignItems: 'center',
-    borderWidth: 2,
-    marginBottom: theme.spacing.sm,
-  },
-  icon: {
-    fontSize: 32,
-  },
-  iconLocked: {
-    fontSize: 24,
+    justifyContent: 'space-between',
+    flex: 1, // Pushes content to fill height
   },
   title: {
-    fontSize: theme.typography.fontSize.sm,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: PALETTE.text,
     textAlign: 'center',
-    marginBottom: theme.spacing.xs,
-    minHeight: 32,
+    marginBottom: 8,
+    fontFamily: 'monospace',
+    textTransform: 'uppercase',
+    minHeight: 28, // Fix height for 2 lines
   },
   textLocked: {
-    color: theme.colors.text.tertiary,
+    color: PALETTE.textDim,
   },
-  unlockedBadge: {
-    backgroundColor: theme.colors.status.success,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: 4,
-    borderRadius: theme.borderRadius.sm,
+
+  // Status / Progress
+  statusBadge: {
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 2,
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
-  unlockedText: {
-    fontSize: theme.typography.fontSize.xs,
-    fontWeight: theme.typography.fontWeight.bold,
-    color: theme.colors.text.primary,
+  statusText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
-  progressContainer: {
+  
+  progressSection: {
     width: '100%',
+    alignItems: 'center',
   },
-  progressBar: {
+  retroProgressBar: {
+    width: '100%',
     height: 6,
-    backgroundColor: theme.colors.background.tertiary,
-    borderRadius: theme.borderRadius.full,
-    overflow: 'hidden',
+    backgroundColor: PALETTE.surface,
+    borderWidth: 1,
+    borderColor: PALETTE.textDim,
+    borderRadius: 2,
     marginBottom: 4,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary.light,
-    borderRadius: theme.borderRadius.full,
   },
   progressText: {
-    fontSize: theme.typography.fontSize.xs,
-    color: theme.colors.text.tertiary,
-    textAlign: 'center',
-  },
-  rarityBadge: {
-    position: 'absolute',
-    top: theme.spacing.xs,
-    right: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: theme.borderRadius.sm,
-  },
-  rarityText: {
-    fontSize: 8,
-    fontWeight: theme.typography.fontWeight.extrabold,
-    color: theme.colors.background.primary,
+    fontSize: 9,
+    color: PALETTE.textDim,
+    fontFamily: 'monospace',
   },
 });

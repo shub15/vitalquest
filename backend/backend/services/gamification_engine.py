@@ -58,35 +58,59 @@ def apply_xp_and_level(user: Dict, xp_gain: float) -> Dict:
     return result
 
 
-def determine_rpg_class_from_workouts(manual_workouts: List[Dict]) -> str:
-    """Determine RPG class by counting activity_type frequency in manual_workouts.
-
-    Rules:
-      - Mostly 'Gym' or contains 'weights' -> 'Warrior'
-      - Mostly 'Run' or 'Walk' -> 'Ranger'
-      - Mostly 'Yoga' or 'Stretch' -> 'Monk'
-      - Low activity -> 'Villager'
+def update_user_rpg_class(user: Dict, manual_workouts: List[Dict]) -> str:
     """
-    if not manual_workouts:
-        return "Villager"
+    Determine user's RPG class based on their workout history.
+    
+    Returns the determined RPG class.
+    
+    Logic:
+    - After 1+ week of data, class is determined by most frequent workout type
+    - Gym/Weights → Warrior
+    - Walk → Assassin
+    - Yoga/Meditation → Monk
+    - None/Very Low → Villager
+    """
+    rpg_class = determine_rpg_class_from_workouts(manual_workouts)
+    logger.info(f"User {user.get('user_id')} assigned class: {rpg_class}")
+    return rpg_class
 
+
+def determine_rpg_class_from_workouts(manual_workouts: List[Dict]) -> str:
+    """
+    Determine RPG class based on primary workout activity type.
+    
+    RPG Classes:
+    - Warrior: Gym, weights, strength training
+    - Assassin: Walk (strategic, silent, low-impact assassin style)
+    - Monk: Yoga, stretching, meditation, pilates
+    - Villager: No workouts or very low activity
+    
+    After 1 week of data collection, class is determined by most frequent workout.
+    For demo, users are assigned classes in database.
+    """
+    if not manual_workouts or len(manual_workouts) == 0:
+        return "Villager"
+    
+    # Count frequency of each activity type
     freq = {}
     for w in manual_workouts:
-        t = (w.get("activity_type") or "").lower()
-        freq[t] = freq.get(t, 0) + 1
-
-    # find most common
-    most = max(freq.items(), key=lambda x: x[1])
-    label = most[0]
-    if any(k in label for k in ("gym", "weights", "strength", "lift")):
+        activity_type = (w.get("activity_type") or "").lower().strip()
+        freq[activity_type] = freq.get(activity_type, 0) + 1
+    
+    # Find most common activity
+    most_common_activity = max(freq.items(), key=lambda x: x[1])[0]
+    
+    # Determine class based on activity type
+    if any(k in most_common_activity for k in ("gym", "weights", "strength", "lift", "training")):
         return "Warrior"
-    if any(k in label for k in ("run", "walk", "jog", "cycle")):
-        return "Ranger"
-    if any(k in label for k in ("yoga", "stretch", "pilates")):
+    elif any(k in most_common_activity for k in ("walk", "walking")):
+        return "Assassin"
+    elif any(k in most_common_activity for k in ("yoga", "stretch", "pilates", "meditation", "flexibility")):
         return "Monk"
-
-    # fallback: if total workouts fairly low, villager
-    total_count = sum(freq.values())
-    if total_count <= 1:
+    else:
+        # If total workouts very low or none of the above
+        total_count = sum(freq.values())
+        if total_count <= 1:
+            return "Villager"
         return "Villager"
-    return "Adventurer"

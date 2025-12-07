@@ -44,19 +44,39 @@ async def calculate_xp_endpoint(payload: HealthData):
         result = gamification_engine.apply_xp_and_level(user, xp_gain)
         print(f"[GAMIFICATION] New Level: {result['new_level']}, New XP: {result['new_xp_total']}")
 
-        # update user record
+        # Get workouts from daily logs to determine RPG class
+        from datetime import date, timedelta
+        end = date.today()
+        start = end - timedelta(days=7)
+        logs_json = await db.get_daily_logs_for_user_range(payload.user_id, str(start), str(end))
+        
+        workouts = []
+        for j in logs_json:
+            try:
+                d = json.loads(j)
+            except Exception:
+                d = j if isinstance(j, dict) else {}
+            for w in d.get("manual_workouts", []) or []:
+                workouts.append(w)
+        
+        # Determine RPG class
+        rpg_class = gamification_engine.determine_rpg_class_from_workouts(workouts)
+        print(f"[GAMIFICATION] User RPG Class: {rpg_class}")
+
+        # update user record with new level, XP, and RPG class
         updated_user = {
             "user_id": payload.user_id,
             "username": user.get("username"),
             "team_id": user.get("team_id"),
             "level": result["new_level"],
             "xp": result["new_xp_total"],
+            "rpg_class": rpg_class,
             "strength": user.get("strength", 0),
             "vitality": user.get("vitality", 0),
             "stamina": user.get("stamina", 0),
         }
         await db.upsert_user(updated_user)
-        print(f"[GAMIFICATION] User record updated in MySQL")
+        print(f"[GAMIFICATION] User record updated in MySQL with class: {rpg_class}")
 
         # generate post if leveled up
         if result["leveled_up"]:
@@ -80,7 +100,15 @@ async def calculate_xp_endpoint(payload: HealthData):
 
 @router.get("/user/{user_id}/class")
 async def get_user_class(user_id: str, days: int = Query(7, ge=1, le=30)):
-    """Compute user's RPG class from recent daily_logs (last `days`)."""
+    """
+    Get user's RPG class from recent daily_logs (last `days`).
+    
+    Class Mapping:
+    - Warrior: Gym, weights, strength training
+    - Assassin: Walk
+    - Monk: Yoga, stretching, meditation
+    - Villager: No workouts or very low activity
+    """
     try:
         db = await get_db()
         print(f"[GAMIFICATION] Computing RPG class for {user_id}")
@@ -112,15 +140,20 @@ async def get_user_class(user_id: str, days: int = Query(7, ge=1, le=30)):
 
         # avatar/category suggestions mapping
         avatar_map = {
-            "Warrior": {"avatar": "https://picsum.photos/seed/warrior/200/200", "category": "Strength"},
-            "Ranger": {"avatar": "https://picsum.photos/seed/ranger/200/200", "category": "Endurance"},
-            "Monk": {"avatar": "https://picsum.photos/seed/monk/200/200", "category": "Flexibility"},
-            "Villager": {"avatar": "https://picsum.photos/seed/villager/200/200", "category": "Casual"},
-            "Adventurer": {"avatar": "https://picsum.photos/seed/adventurer/200/200", "category": "Balanced"},
+            "Warrior": {"avatar": "https://picsum.photos/seed/warrior/200/200", "category": "Strength", "description": "Master of gym and weights"},
+            "Assassin": {"avatar": "https://picsum.photos/seed/assassin/200/200", "category": "Agility", "description": "Swift walker on the move"},
+            "Monk": {"avatar": "https://picsum.photos/seed/monk/200/200", "category": "Flexibility", "description": "Master of mind and body"},
+            "Villager": {"avatar": "https://picsum.photos/seed/villager/200/200", "category": "Casual", "description": "Just starting your journey"},
         }
 
-        suggestion = avatar_map.get(rpg_class, avatar_map["Adventurer"])
-        return {"user_id": user_id, "rpg_class": rpg_class, "suggestion": suggestion}
+        suggestion = avatar_map.get(rpg_class, avatar_map["Villager"])
+        return {
+            "user_id": user_id,
+            "rpg_class": rpg_class,
+            "workouts_analyzed": len(workouts),
+            "days_analyzed": days,
+            "suggestion": suggestion
+        }
     except Exception as e:
         print(f"[GAMIFICATION] Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

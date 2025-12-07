@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from backend.routers import gamification, battles, leaderboard, social_feed, admin, ai_coach, chatbot
+from backend.routers import gamification, battles, leaderboard, social_feed, admin, ai_coach, chatbot, notifications, step_milestones
 from backend.database.mysql_client import MySQLClient
 from backend.services import aggregator
 import asyncio
@@ -17,6 +17,8 @@ app.include_router(social_feed.router, prefix="/social", tags=["Social"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 app.include_router(ai_coach.router, prefix="/ai", tags=["AI Coach"])
 app.include_router(chatbot.router, prefix="/api", tags=["AI Chatbot"])
+app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+app.include_router(step_milestones.router, prefix="/step-milestones", tags=["Step Milestones"])
 
 
 @app.on_event("startup")

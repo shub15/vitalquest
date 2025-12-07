@@ -85,11 +85,12 @@ export async function getStepsData(startDate: Date, endDate: Date): Promise<numb
     console.log('[Health Connect] Steps result:', JSON.stringify(result, null, 2));
 
     let totalSteps = 0;
-    if (Array.isArray(result)) {
-      result.forEach((record: any) => {
+    const records = result?.records || [];
+    if (Array.isArray(records)) {
+      records.forEach((record: any) => {
         const steps = record.count || 0;
         totalSteps += steps;
-        console.log('[Health Connect] Step record:', { count: steps, time: record.time });
+        console.log('[Health Connect] Step record:', { count: steps, startTime: record.startTime, endTime: record.endTime });
       });
     }
 
@@ -119,9 +120,10 @@ export async function getExerciseSessions(startDate: Date, endDate: Date): Promi
     console.log('[Health Connect] Exercise result:', JSON.stringify(result, null, 2));
 
     const activities: HealthActivity[] = [];
+    const records = result?.records || [];
 
-    if (Array.isArray(result)) {
-      result.forEach((record: any) => {
+    if (Array.isArray(records)) {
+      records.forEach((record: any) => {
         const startTime = new Date(record.startTime);
         const endTime = new Date(record.endTime);
         const durationMinutes = Math.floor((endTime.getTime() - startTime.getTime()) / 60000);
@@ -169,9 +171,10 @@ export async function getSleepData(startDate: Date, endDate: Date): Promise<Heal
     console.log('[Health Connect] Sleep result:', JSON.stringify(result, null, 2));
 
     const sleepActivities: HealthActivity[] = [];
+    const records = result?.records || [];
 
-    if (Array.isArray(result)) {
-      result.forEach((record: any) => {
+    if (Array.isArray(records)) {
+      records.forEach((record: any) => {
         const startTime = new Date(record.startTime);
         const endTime = new Date(record.endTime);
         const durationHours = (endTime.getTime() - startTime.getTime()) / 3600000;
@@ -221,9 +224,10 @@ export async function getHeartRateData(startDate: Date, endDate: Date): Promise<
 
     let totalBpm = 0;
     let count = 0;
+    const records = result?.records || [];
 
-    if (Array.isArray(result)) {
-      result.forEach((record: any) => {
+    if (Array.isArray(records)) {
+      records.forEach((record: any) => {
         if (record.samples) {
           record.samples.forEach((sample: any) => {
             totalBpm += sample.beatsPerMinute || 0;

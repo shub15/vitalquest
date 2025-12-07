@@ -3,10 +3,8 @@ import { QuestCard } from '@/components/game/QuestCard';
 import { StatsPanel } from '@/components/game/StatsPanel';
 import { QuickLogModal } from '@/components/health/QuickLogModal';
 import { gameConfig } from '@/constants/gameConfig';
-import { theme } from '@/constants/theme';
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
-import { checkAchievements, initializeGame, updateQuestProgress } from '@/services/gamificationEngine';
-import { initialAchievements } from '@/services/mockData';
+import { checkAchievements, updateQuestProgress } from '@/services/gamificationEngine';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -40,7 +38,6 @@ export default function DashboardScreen() {
 
   const user = useGameStore((state) => state.user);
   const activeQuests = useGameStore((state) => state.activeQuests);
-  const initializeUser = useGameStore((state) => state.initializeUser);
   const completeQuest = useGameStore((state) => state.completeQuest);
 
   const todaySteps = useHealthStore((state) => state.todaySteps);
@@ -67,19 +64,7 @@ export default function DashboardScreen() {
     else Alert.alert('SYNC ERROR', 'Archive retrieval failed.');
   };
 
-  useEffect(() => {
-    if (!user) {
-      initializeUser('HealthHero');
-      const gameStore = useGameStore.getState();
-      initialAchievements.forEach((achievement) => {
-        if (!gameStore.achievements.find((a) => a.id === achievement.id)) {
-          gameStore.achievements.push(achievement);
-        }
-      });
-      initializeGame();
-    }
-  }, [user, initializeUser]);
-
+  // Update quest progress when health metrics change
   useEffect(() => {
     if (user) {
       updateQuestProgress();

@@ -271,6 +271,23 @@ export const useHealthStore = create<HealthState>()(
       },
 
       importHealthData: (activities: Omit<HealthActivity, 'id'>[]) => {
+        // Get unique dates from new activities
+        const affectedDates = new Set(
+          activities.map((a) => format(startOfDay(new Date(a.date)), 'yyyy-MM-dd'))
+        );
+        
+        // Remove existing health_connect activities for the same dates to avoid duplicates
+        set((state) => ({
+          activities: state.activities.filter((a) => {
+            const activityDate = format(startOfDay(new Date(a.date)), 'yyyy-MM-dd');
+            // Keep activity if:
+            // 1. It's not from health_connect source, OR
+            // 2. It's from a date we're not updating
+            return a.source !== 'health_connect' || !affectedDates.has(activityDate);
+          }),
+        }));
+        
+        // Add new activities
         const newActivities: HealthActivity[] = activities.map((a) => ({
           ...a,
           id: Date.now().toString() + Math.random(),
@@ -281,45 +298,54 @@ export const useHealthStore = create<HealthState>()(
         }));
         
         // Update daily summaries for affected dates
-        const uniqueDates = new Set(
-          newActivities.map((a) => format(startOfDay(new Date(a.date)), 'yyyy-MM-dd'))
-        );
-        
-        uniqueDates.forEach((dateStr) => {
+        affectedDates.forEach((dateStr) => {
           get().updateDailySummary(new Date(dateStr));
         });
         
-        // Update today's totals
+        // Recalculate today's totals from ALL activities (not just new ones)
         const today = startOfDay(new Date());
-        const todayActivities = newActivities.filter(
+        const allTodayActivities = get().activities.filter(
           (a) => startOfDay(new Date(a.date)).getTime() === today.getTime()
         );
         
-        todayActivities.forEach((activity) => {
+        // Reset and recalculate
+        let steps = 0;
+        let exerciseMinutes = 0;
+        let meditationMinutes = 0;
+        let waterGlasses = 0;
+        let mealsLogged = 0;
+        let sleepHours = 0;
+        
+        allTodayActivities.forEach((activity) => {
           switch (activity.type) {
             case 'steps':
-              set((state) => ({ todaySteps: state.todaySteps + activity.value }));
+              steps += activity.value;
               break;
             case 'exercise':
-              set((state) => ({
-                todayExerciseMinutes: state.todayExerciseMinutes + (activity.metadata?.duration || activity.value),
-              }));
+              exerciseMinutes += activity.metadata?.duration || activity.value;
               break;
             case 'meditation':
-              set((state) => ({
-                todayMeditationMinutes: state.todayMeditationMinutes + (activity.metadata?.duration || activity.value),
-              }));
+              meditationMinutes += activity.metadata?.duration || activity.value;
               break;
             case 'water':
-              set((state) => ({ todayWaterGlasses: state.todayWaterGlasses + activity.value }));
+              waterGlasses += activity.value;
               break;
             case 'meal':
-              set((state) => ({ todayMealsLogged: state.todayMealsLogged + 1 }));
+              mealsLogged += 1;
               break;
             case 'sleep':
-              set((state) => ({ todaySleepHours: activity.value }));
+              sleepHours = activity.value; // Use latest sleep value
               break;
           }
+        });
+        
+        set({
+          todaySteps: steps,
+          todayExerciseMinutes: exerciseMinutes,
+          todayMeditationMinutes: meditationMinutes,
+          todayWaterGlasses: waterGlasses,
+          todayMealsLogged: mealsLogged,
+          todaySleepHours: sleepHours,
         });
         
         get().updateLastSync();

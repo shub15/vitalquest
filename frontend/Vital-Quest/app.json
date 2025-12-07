@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Vital-Quest",
-    "slug": "Vital-Quest",
+    "name": "VitalQuest",
+    "slug": "VitalQuest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

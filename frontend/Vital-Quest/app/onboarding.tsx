@@ -1,5 +1,6 @@
 import { CharacterAvatar } from '@/components/game/CharacterAvatar';
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
+import { getFCMToken, setupNotificationHandlers } from '@/services/fcm';
 import { generateDailyQuests } from '@/services/gamificationEngine';
 import { initialAchievements } from '@/services/mockData';
 import { initializeNotifications } from '@/services/notifications';
@@ -46,7 +47,7 @@ export default function OnboardingScreen() {
   const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { initializeUser, addQuest, achievements } = useGameStore();
+  const { initializeUser, addQuest, achievements, updateFCMToken } = useGameStore();
   const { initialize: initHealthConnect, isAvailable } = useHealthConnectSync();
 
   const handleNext = () => {
@@ -66,8 +67,10 @@ export default function OnboardingScreen() {
   const handleComplete = async () => {
     setIsLoading(true);
     try {
+      // Initialize user
       initializeUser(username.trim());
       
+      // Initialize achievements if empty
       if (achievements.length === 0) {
         initialAchievements.forEach((achievement) => {
           useGameStore.setState((state) => ({
@@ -76,11 +79,34 @@ export default function OnboardingScreen() {
         });
       }
 
+      // Generate daily quests
       const dailyQuests = generateDailyQuests();
       dailyQuests.forEach((quest) => addQuest(quest));
       
+      // Initialize notifications
       await initializeNotifications();
+      
+      // Initialize Health Connect if available
       if (isAvailable) await initHealthConnect();
+      
+      // Get FCM token for push notifications
+      console.log('[Onboarding] Requesting FCM token...');
+      const fcmResult = await getFCMToken();
+      if (fcmResult.token) {
+        console.log('[Onboarding] FCM token received, saving to user profile');
+        updateFCMToken(fcmResult.token);
+        
+        // TODO: Register token with backend when backend is ready
+        // const user = useGameStore.getState().user;
+        // if (user) {
+        //   await registerFCMTokenWithBackend(fcmResult.token, user.id);
+        // }
+      } else if (fcmResult.error) {
+        console.warn('[Onboarding] FCM token error:', fcmResult.error);
+      }
+      
+      // Setup notification handlers
+      setupNotificationHandlers();
 
       router.replace('/(tabs)');
     } catch (error) {

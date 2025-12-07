@@ -14,6 +14,7 @@ export interface User {
   email?: string;
   createdAt: Date;
   characterClass: CharacterClass; // Character class selection
+  fcmToken?: string; // Firebase Cloud Messaging token for push notifications
   character: Character;
   stats: UserStats;
   settings: UserSettings;

@@ -32,7 +32,8 @@
         "android.permission.health.connect.read",
         "android.permission.health.connect.write"
       ],
-      "package": "com.binarybandits.vitalquest"
+      "package": "com.binarybandits.vitalquest",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -41,6 +42,7 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-firebase/app",
       [
         "expo-notifications",
         {

@@ -62,6 +62,9 @@ interface GameState {
   updateStreak: (type: Streak['type'], referenceId?: string) => void;
   breakStreak: (type: Streak['type'], referenceId?: string) => void;
   
+  // FCM Token Actions
+  updateFCMToken: (token: string) => void;
+  
   // Utility
   reset: () => void;
 }
@@ -567,6 +570,17 @@ export const useGameStore = create<GameState>()(
             } : null,
           }));
         }
+      },
+
+      // FCM Token Actions
+      updateFCMToken: (token: string) => {
+        console.log('[GameStore] Updating FCM token');
+        set((state) => ({
+          user: state.user ? {
+            ...state.user,
+            fcmToken: token,
+          } : null,
+        }));
       },
 
       reset: () => {

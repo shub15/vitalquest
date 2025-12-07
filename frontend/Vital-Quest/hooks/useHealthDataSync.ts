@@ -1,4 +1,5 @@
 import { useHealthConnectSync } from '@/hooks/useHealthConnectSync';
+import { setupNotificationHandlers } from '@/services/fcm';
 import { initializeNotifications, scheduleDailyReminders } from '@/services/notifications';
 import { useGameStore } from '@/store/gameStore';
 import { useHealthStore } from '@/store/healthStore';
@@ -95,7 +96,15 @@ export function useNotificationSetup() {
           // Schedule daily reminders
           await scheduleDailyReminders();
           console.log('[useNotificationSetup] Daily reminders scheduled');
+          
+          // Setup FCM notification handlers
+          console.log('[useNotificationSetup] Setting up FCM notification handlers');
+          const cleanupFCMHandlers = setupNotificationHandlers();
+          
           setHasSetup(true);
+          
+          // Return cleanup function
+          return cleanupFCMHandlers;
         } else {
           console.warn('[useNotificationSetup] Failed to initialize notifications');
         }
@@ -104,6 +113,15 @@ export function useNotificationSetup() {
       }
     };
 
-    setupNotifications();
+    const cleanup = setupNotifications();
+    
+    // Cleanup on unmount
+    return () => {
+      if (cleanup && typeof cleanup.then === 'function') {
+        cleanup.then((cleanupFn) => {
+          if (cleanupFn) cleanupFn();
+        });
+      }
+    };
   }, [user, hasSetup]); // Only run when user changes or setup status changes
 }

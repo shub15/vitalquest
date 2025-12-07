@@ -1,5 +1,10 @@
-fastapi
-uvicorn
+fastapi>=0.95.0
+uvicorn[standard]>=0.20.0
+aiosqlite>=0.18.0
+pytest>=7.0.0
+httpx>=0.24.0
+aiomysql>=0.2.0
+PyMySQL>=1.1.0
 pydantic
 google-generativeai
 python-dotenv
@@ -7,4 +12,3 @@ pytest
 httpx
 requests
 streamlit
-aiosqlite

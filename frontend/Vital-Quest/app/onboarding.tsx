@@ -102,7 +102,7 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.avatarSection}>
-        <CharacterAvatar level={1} size={120} />
+        <CharacterAvatar level={1} size={120} characterClass="villager" />
       </View>
 
       <View style={styles.inputSection}>
@@ -173,7 +173,7 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.idCard}>
-        <CharacterAvatar level={1} size={100} />
+        <CharacterAvatar level={1} size={100} characterClass="villager" />
         <View style={styles.idInfo}>
           <Text style={styles.idLabel}>ID CARD</Text>
           <Text style={styles.idName}>{username}</Text>

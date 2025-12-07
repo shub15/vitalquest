@@ -5,6 +5,7 @@ export type QuestCategory = 'fitness' | 'nutrition' | 'mindfulness' | 'sleep' | 
 export type QuestDifficulty = 'easy' | 'medium' | 'hard' | 'epic';
 export type AchievementRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 export type ActivityType = 'steps' | 'exercise' | 'meditation' | 'meal' | 'water' | 'sleep';
+export type CharacterClass = 'warrior' | 'assassin' | 'monk' | 'villager';
 
 // User Profile & Character
 export interface User {
@@ -12,6 +13,7 @@ export interface User {
   username: string;
   email?: string;
   createdAt: Date;
+  characterClass: CharacterClass; // Character class selection
   character: Character;
   stats: UserStats;
   settings: UserSettings;

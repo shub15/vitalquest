@@ -17,6 +17,11 @@ export function useHealthConnectSync() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track previous synced values to avoid duplicate XP
+  const [previousSteps, setPreviousSteps] = useState(0);
+  const [previousExerciseMinutes, setPreviousExerciseMinutes] = useState(0);
+  const [previousSleepHours, setPreviousSleepHours] = useState(0);
 
   const { importHealthData, setSyncStatus, isSyncing } = useHealthStore();
   const { addXp, user } = useGameStore();
@@ -136,36 +141,50 @@ export function useHealthConnectSync() {
         console.log('[useHealthConnectSync] Importing', activities.length, 'activities');
         importHealthData(activities);
 
-        // Award XP for synced activities
+        // Award XP only for NEW activities (compare with previous sync)
         if (user) {
           let totalXp = 0;
 
-          // Calculate XP for steps
-          if (healthData.steps > 0) {
-            const stepsXp = calculateXpForActivity('steps', healthData.steps);
-            console.log('[useHealthConnectSync] Steps XP:', stepsXp);
+          // Calculate XP for NEW steps only
+          const newSteps = Math.max(0, healthData.steps - previousSteps);
+          if (newSteps > 0) {
+            const stepsXp = calculateXpForActivity('steps', newSteps);
+            console.log('[useHealthConnectSync] New steps:', newSteps, 'XP:', stepsXp);
             totalXp += stepsXp;
           }
+          setPreviousSteps(healthData.steps);
 
-          // Calculate XP for exercises
-          healthData.exercises.forEach((exercise) => {
-            const duration = exercise.metadata?.duration || 0;
-            const exerciseXp = calculateXpForActivity('exercise', duration);
-            console.log('[useHealthConnectSync] Exercise XP:', exerciseXp);
+          // Calculate XP for NEW exercise minutes
+          const totalExerciseMinutes = healthData.exercises.reduce(
+            (sum, ex) => sum + (ex.metadata?.duration || 0), 
+            0
+          );
+          const newExerciseMinutes = Math.max(0, totalExerciseMinutes - previousExerciseMinutes);
+          if (newExerciseMinutes > 0) {
+            const exerciseXp = calculateXpForActivity('exercise', newExerciseMinutes);
+            console.log('[useHealthConnectSync] New exercise mins:', newExerciseMinutes, 'XP:', exerciseXp);
             totalXp += exerciseXp;
-          });
+          }
+          setPreviousExerciseMinutes(totalExerciseMinutes);
 
-          // Calculate XP for sleep
-          healthData.sleep.forEach((sleep) => {
-            const sleepHours = sleep.value || 0;
-            const sleepXp = calculateXpForActivity('sleep', sleepHours);
-            console.log('[useHealthConnectSync] Sleep XP:', sleepXp);
+          // Calculate XP for NEW sleep hours
+          const totalSleepHours = healthData.sleep.reduce(
+            (sum, s) => sum + (s.value || 0),
+            0
+          );
+          const newSleepHours = Math.max(0, totalSleepHours - previousSleepHours);
+          if (newSleepHours > 0) {
+            const sleepXp = calculateXpForActivity('sleep', newSleepHours);
+            console.log('[useHealthConnectSync] New sleep hours:', newSleepHours, 'XP:', sleepXp);
             totalXp += sleepXp;
-          });
+          }
+          setPreviousSleepHours(totalSleepHours);
 
           if (totalXp > 0) {
-            console.log('[useHealthConnectSync] Awarding total XP:', totalXp);
+            console.log('[useHealthConnectSync] Awarding XP for NEW activities:', totalXp);
             addXp(totalXp);
+          } else {
+            console.log('[useHealthConnectSync] No new activities, no XP awarded');
           }
         }
       } else {
@@ -260,36 +279,47 @@ export function useHealthConnectSync() {
         console.log('[useHealthConnectSync] Importing', activities.length, 'activities from date range');
         importHealthData(activities);
 
-        // Award XP for synced activities
+        // Award XP only for NEW activities (same logic as syncData)
         if (user) {
           let totalXp = 0;
 
-          // Calculate XP for steps
-          if (healthData.steps > 0) {
-            const stepsXp = calculateXpForActivity('steps', healthData.steps);
-            console.log('[useHealthConnectSync] Steps XP:', stepsXp);
+          const newSteps = Math.max(0, healthData.steps - previousSteps);
+          if (newSteps > 0) {
+            const stepsXp = calculateXpForActivity('steps', newSteps);
+            console.log('[useHealthConnectSync] Range - New steps:', newSteps, 'XP:', stepsXp);
             totalXp += stepsXp;
           }
+          setPreviousSteps(healthData.steps);
 
-          // Calculate XP for exercises
-          healthData.exercises.forEach((exercise) => {
-            const duration = exercise.metadata?.duration || 0;
-            const exerciseXp = calculateXpForActivity('exercise', duration);
-            console.log('[useHealthConnectSync] Exercise XP:', exerciseXp);
+          const totalExerciseMinutes = healthData.exercises.reduce(
+            (sum, ex) => sum + (ex.metadata?.duration || 0),
+            0
+          );
+          const newExerciseMinutes = Math.max(0, totalExerciseMinutes - previousExerciseMinutes);
+          if (newExerciseMinutes > 0) {
+            const exerciseXp = calculateXpForActivity('exercise', newExerciseMinutes);
+            console.log('[useHealthConnectSync] Range - New exercise mins:', newExerciseMinutes, 'XP:', exerciseXp);
             totalXp += exerciseXp;
-          });
+          }
+          setPreviousExerciseMinutes(totalExerciseMinutes);
 
-          // Calculate XP for sleep
-          healthData.sleep.forEach((sleep) => {
-            const sleepHours = sleep.value || 0;
-            const sleepXp = calculateXpForActivity('sleep', sleepHours);
-            console.log('[useHealthConnectSync] Sleep XP:', sleepXp);
+          const totalSleepHours = healthData.sleep.reduce(
+            (sum, s) => sum + (s.value || 0),
+            0
+          );
+          const newSleepHours = Math.max(0, totalSleepHours - previousSleepHours);
+          if (newSleepHours > 0) {
+            const sleepXp = calculateXpForActivity('sleep', newSleepHours);
+            console.log('[useHealthConnectSync] Range - New sleep hours:', newSleepHours, 'XP:', sleepXp);
             totalXp += sleepXp;
-          });
+          }
+          setPreviousSleepHours(totalSleepHours);
 
           if (totalXp > 0) {
-            console.log('[useHealthConnectSync] Awarding total XP for range:', totalXp);
+            console.log('[useHealthConnectSync] Awarding XP for NEW range activities:', totalXp);
             addXp(totalXp);
+          } else {
+            console.log('[useHealthConnectSync] No new range activities, no XP awarded');
           }
         }
       } else {

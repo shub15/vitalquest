@@ -115,7 +115,7 @@ export default function DashboardScreen() {
               </View>
             </View>
             <View style={styles.avatarContainer}>
-              <CharacterAvatar level={user.character.level} size={70} />
+              <CharacterAvatar level={user.character.level} size={70} characterClass={user.characterClass} />
             </View>
           </View>
 

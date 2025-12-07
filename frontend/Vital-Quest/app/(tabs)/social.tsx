@@ -1,10 +1,13 @@
+import { ActivityPostCard } from '@/components/social/ActivityPostCard';
+import { CreatePostModal } from '@/components/social/CreatePostModal';
 import { Leaderboard } from '@/components/social/Leaderboard';
-import { generateMockLeaderboard, mockFriends, mockPendingRequests } from '@/services/mockSocialData';
+import { ActivityPost, generateMockLeaderboard, mockActivityPosts, mockFriends, mockPendingRequests } from '@/services/mockSocialData';
 import { useGameStore } from '@/store/gameStore';
+import { useHealthStore } from '@/store/healthStore';
 import { useSocialStore } from '@/store/socialStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Retro Network Palette ---
@@ -28,10 +31,15 @@ const RETRO_BORDER = 2;
 
 export default function SocialScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly');
-  const [selectedTab, setSelectedTab] = useState<'leaderboard' | 'friends'>('leaderboard');
+  const [selectedTab, setSelectedTab] = useState<'leaderboard' | 'friends' | 'chronicles'>('leaderboard');
+  const [posts, setPosts] = useState<ActivityPost[]>(mockActivityPosts);
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
 
   const user = useGameStore((state) => state.user);
   const { friends, leaderboard, updateLeaderboard, addFriend, pendingRequests } = useSocialStore();
+  const todaySteps = useHealthStore((state) => state.todaySteps);
+  const todayExerciseMinutes = useHealthStore((state) => state.todayExerciseMinutes);
+  const todayWaterGlasses = useHealthStore((state) => state.todayWaterGlasses);
 
   useEffect(() => {
     // Initialize mock data
@@ -49,6 +57,45 @@ export default function SocialScreen() {
       mockFriends.forEach(friend => addFriend(friend));
     }
   }, [user]);
+
+  const handleLikePost = (postId: string) => {
+    setPosts(prevPosts =>
+      prevPosts.map(post =>
+        post.id === postId
+          ? {
+              ...post,
+              likes: post.likedByUser ? post.likes - 1 : post.likes + 1,
+              likedByUser: !post.likedByUser,
+            }
+          : post
+      )
+    );
+  };
+
+  const handleCreatePost = (message: string) => {
+    if (!user) return;
+
+    const newPost: ActivityPost = {
+      id: `user-post-${Date.now()}`,
+      userId: user.id,
+      username: user.username,
+      userLevel: user.character.level,
+      avatarColor: '#6B2FBF',
+      timestamp: new Date(),
+      message,
+      stats: {
+        steps: todaySteps > 0 ? todaySteps : undefined,
+        exerciseMinutes: todayExerciseMinutes > 0 ? todayExerciseMinutes : undefined,
+        waterGlasses: todayWaterGlasses > 0 ? todayWaterGlasses : undefined,
+        streakDays: user.stats.currentStreak > 0 ? user.stats.currentStreak : undefined,
+      },
+      likes: 0,
+      likedByUser: false,
+    };
+
+    // Add new post to the beginning of the feed
+    setPosts((prevPosts) => [newPost, ...prevPosts]);
+  };
 
   if (!user) {
     return (
@@ -87,7 +134,11 @@ export default function SocialScreen() {
                 color={selectedTab === 'leaderboard' ? PALETTE.bg : PALETTE.textDim} 
                 style={{marginRight: 6}}
              />
-            <Text style={[styles.tabText, selectedTab === 'leaderboard' && styles.tabTextActive]}>
+            <Text 
+              style={[styles.tabText, selectedTab === 'leaderboard' && styles.tabTextActive]}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+            >
               RANKINGS
             </Text>
           </TouchableOpacity>
@@ -102,8 +153,31 @@ export default function SocialScreen() {
                 color={selectedTab === 'friends' ? PALETTE.bg : PALETTE.textDim} 
                 style={{marginRight: 6}}
              />
-            <Text style={[styles.tabText, selectedTab === 'friends' && styles.tabTextActive]}>
+            <Text 
+              style={[styles.tabText, selectedTab === 'friends' && styles.tabTextActive]}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+            >
               ALLIES ({friends.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, selectedTab === 'chronicles' && styles.tabActive]}
+            onPress={() => setSelectedTab('chronicles')}
+            activeOpacity={0.9}
+          >
+             <MaterialCommunityIcons 
+                name="book-open-variant" 
+                size={16} 
+                color={selectedTab === 'chronicles' ? PALETTE.bg : PALETTE.textDim} 
+                style={{marginRight: 6}}
+             />
+            <Text 
+              style={[styles.tabText, selectedTab === 'chronicles' && styles.tabTextActive]}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+            >
+              CHRONICLES
             </Text>
           </TouchableOpacity>
         </View>
@@ -134,7 +208,7 @@ export default function SocialScreen() {
               <Leaderboard entries={leaderboard} period={selectedPeriod} />
             </View>
           </>
-        ) : (
+        ) : selectedTab === 'friends' ? (
           <ScrollView style={styles.friendsContainer} showsVerticalScrollIndicator={false}>
             
             {/* --- Pending Requests --- */}
@@ -206,7 +280,42 @@ export default function SocialScreen() {
               <Text style={styles.demoSubText}>Social feeds are currently using mock data protocol.</Text>
             </View>
           </ScrollView>
+        ) : (
+          <ScrollView style={styles.chroniclesContainer} showsVerticalScrollIndicator={false}>
+            {/* Create Post Button */}
+            <TouchableOpacity 
+              style={styles.createPostButton}
+              onPress={() => setShowCreatePostModal(true)}
+            >
+              <MaterialCommunityIcons name="plus-circle" size={24} color={PALETTE.accent.purple} />
+              <View style={styles.createPostContent}>
+                <Text style={styles.createPostTitle}>CHRONICLE_NEW_TALE</Text>
+                <Text style={styles.createPostSubtitle}>Share your daily victories with the realm</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Feed Header */}
+            <SectionHeader title="ADVENTURE_FEED" count={posts.length} color={PALETTE.accent.purple} />
+
+            {/* Posts Feed */}
+            {posts.map((post) => (
+              <ActivityPostCard key={post.id} post={post} onLike={handleLikePost} />
+            ))}
+
+            {/* Footer */}
+            <View style={styles.demoNotice}>
+              <Text style={styles.demoText}>// SYSTEM_NOTICE: CHRONICLE_PROTOCOL_ACTIVE</Text>
+              <Text style={styles.demoSubText}>Activity posts will sync with backend when implemented.</Text>
+            </View>
+          </ScrollView>
         )}
+
+        {/* Create Post Modal */}
+        <CreatePostModal
+          visible={showCreatePostModal}
+          onClose={() => setShowCreatePostModal(false)}
+          onCreatePost={handleCreatePost}
+        />
       </View>
     </SafeAreaView>
   );
@@ -318,6 +427,8 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: PALETTE.textDim,
     letterSpacing: 0.5,
+    flexWrap: 'wrap',
+    flexShrink: 1
   },
   tabTextActive: {
     color: PALETTE.bg, // Dark text on bright tab
@@ -477,6 +588,37 @@ const styles = StyleSheet.create({
   viewButtonText: {
     fontSize: 10,
     fontWeight: 'bold',
+    color: PALETTE.textDim,
+  },
+
+  // --- Chronicles Tab ---
+  chroniclesContainer: {
+    flex: 1,
+  },
+  createPostButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: PALETTE.surface,
+    padding: 14,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: PALETTE.accent.purple,
+    marginBottom: 20,
+    borderBottomWidth: 3,
+  },
+  createPostContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  createPostTitle: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: PALETTE.accent.purple,
+    fontFamily: 'monospace',
+    marginBottom: 2,
+  },
+  createPostSubtitle: {
+    fontSize: 11,
     color: PALETTE.textDim,
   },
 

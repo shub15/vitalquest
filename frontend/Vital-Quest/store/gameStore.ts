@@ -70,6 +70,7 @@ const createDefaultUser = (username: string): User => ({
   id: Date.now().toString(),
   username,
   createdAt: new Date(),
+  characterClass: 'villager', // Default class
   character: {
     name: username,
     level: 1,
@@ -279,6 +280,12 @@ export const useGameStore = create<GameState>()(
         set((state) => {
           const quest = state.activeQuests.find((q) => q.id === questId);
           if (!quest) return state;
+          
+          // Prevent duplicate XP - check if already completed
+          if (quest.completed) {
+            console.log('[Quest] Quest already completed, skipping rewards:', quest.title);
+            return state;
+          }
           
           // Award XP and gold
           get().addXp(quest.xpReward);

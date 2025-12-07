@@ -5,7 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Retro Dark Palette ---
@@ -71,7 +71,7 @@ export default function ProfileScreen() {
           <View style={styles.idCard}>
             <View style={styles.idHeaderRow}>
               <View style={styles.avatarFrame}>
-                <CharacterAvatar level={user.character.level} size={100} />
+                <CharacterAvatar level={user.character.level} size={100} characterClass={user.characterClass} />
               </View>
               
               <View style={styles.idInfo}>

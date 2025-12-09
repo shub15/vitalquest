@@ -389,6 +389,8 @@ export const updateQuestProgress = () => {
   
   if (!todaySummary) return;
   
+  const questsToComplete: string[] = [];
+  
   gameStore.activeQuests.forEach((quest) => {
     if (quest.completed) return;
     
@@ -416,15 +418,20 @@ export const updateQuestProgress = () => {
         break;
     }
     
-    // Update quest progress
+    // Update quest progress first
     if (newProgress !== quest.progress) {
       gameStore.updateQuest(quest.id, { progress: newProgress });
       
-      // Auto-complete if target reached
-      if (newProgress >= quest.target) {
-        gameStore.completeQuest(quest.id);
+      // Mark for completion if target reached
+      if (newProgress >= quest.target && !quest.completed) {
+        questsToComplete.push(quest.id);
       }
     }
+  });
+  
+  // Complete quests after all progress updates are done
+  questsToComplete.forEach((questId) => {
+    gameStore.completeQuest(questId);
   });
 };
 

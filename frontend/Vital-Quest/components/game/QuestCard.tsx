@@ -75,6 +75,13 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
   const [localCompleted, setLocalCompleted] = React.useState(quest.completed);
   const [hideCheckbox, setHideCheckbox] = React.useState(quest.completed);
   
+  // Get updateQuest from store to update progress before completion
+  const updateQuest = React.useMemo(() => {
+    // Dynamically import to avoid circular dependencies
+    const { useGameStore } = require('@/store/gameStore');
+    return useGameStore.getState().updateQuest;
+  }, []);
+  
   const progress = quest.progress / quest.target;
   const isComplete = progress >= 1 || localCompleted;
   
@@ -96,13 +103,26 @@ export const QuestCard: React.FC<QuestCardProps> = ({ quest, onPress, onComplete
   };
   
   const handleComplete = () => {
+    console.log('[QuestCard] handleComplete called, isComplete:', isComplete);
     if (isComplete) return;
+    
+    console.log('[QuestCard] Quest not complete, updating progress. Current:', quest.progress, 'Target:', quest.target);
+    
+    // Update quest progress to 100% if not already there
+    if (quest.progress < quest.target) {
+      console.log('[QuestCard] Calling updateQuest to set progress to target');
+      updateQuest(quest.id, { progress: quest.target });
+    }
+    
     setLocalCompleted(true);
     checkScale.value = withSequence(
       withSpring(1.5, { damping: 8 }),
       withSpring(1, { damping: 12 })
     );
+    
+    console.log('[QuestCard] Calling onComplete callback');
     if (onComplete) setTimeout(() => onComplete(), 300);
+    
     // Hide checkbox after animation completes
     setTimeout(() => setHideCheckbox(true), 800);
   };

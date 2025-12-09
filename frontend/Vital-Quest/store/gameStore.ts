@@ -170,14 +170,22 @@ export const useGameStore = create<GameState>()(
       },
 
       addXp: (amount: number) => {
+        console.log('[addXp] Called with amount:', amount);
         set((state) => {
-          if (!state.user) return state;
+          if (!state.user) {
+            console.log('[addXp] No user found, returning state');
+            return state;
+          }
+          
+          console.log('[addXp] Current totalXp:', state.user.character.totalXp);
           
           const newTotalXp = state.user.character.totalXp + amount;
           const newLevel = calculateLevel(newTotalXp);
           const oldLevel = state.user.character.level;
           const xpForNextLevel = getXpForNextLevel(newLevel);
           const currentXp = newTotalXp - gameConfig.levels.xpThresholds[newLevel - 1];
+          
+          console.log('[addXp] New totalXp:', newTotalXp, '| Old level:', oldLevel, '| New level:', newLevel);
           
           // Level up logic
           let updates: Partial<Character> = {
@@ -187,6 +195,7 @@ export const useGameStore = create<GameState>()(
           };
           
           if (newLevel > oldLevel) {
+            console.log('[addXp] LEVEL UP! From', oldLevel, 'to', newLevel);
             // Level up rewards
             const goldReward = gameConfig.goldRewards.levelUp * (newLevel - oldLevel);
             updates.gold = state.user.character.gold + goldReward;
@@ -206,6 +215,8 @@ export const useGameStore = create<GameState>()(
             });
           }
           
+          console.log('[addXp] Updating character with:', updates);
+          
           return {
             user: {
               ...state.user,
@@ -216,6 +227,7 @@ export const useGameStore = create<GameState>()(
             },
           };
         });
+        console.log('[addXp] State update complete');
       },
 
       addGold: (amount: number) => {
@@ -280,9 +292,20 @@ export const useGameStore = create<GameState>()(
       },
 
       completeQuest: (questId: string) => {
+        console.log('[completeQuest] Function called with questId:', questId);
         set((state) => {
           const quest = state.activeQuests.find((q) => q.id === questId);
-          if (!quest) return state;
+          if (!quest) {
+            console.log('[completeQuest] Quest not found in activeQuests');
+            return state;
+          }
+          
+          if (!state.user) {
+            console.log('[completeQuest] No user found');
+            return state;
+          }
+          
+          console.log('[completeQuest] Found quest:', quest.title, '| XP:', quest.xpReward, '| Gold:', quest.goldReward);
           
           // Prevent duplicate XP - check if already completed
           if (quest.completed) {
@@ -290,12 +313,34 @@ export const useGameStore = create<GameState>()(
             return state;
           }
           
-          // Award XP and gold
-          get().addXp(quest.xpReward);
-          get().addGold(quest.goldReward);
+          // Calculate new XP and level
+          const newTotalXp = state.user.character.totalXp + quest.xpReward;
+          const newLevel = calculateLevel(newTotalXp);
+          const oldLevel = state.user.character.level;
+          const currentXp = newTotalXp - gameConfig.levels.xpThresholds[newLevel - 1];
           
-          // Heal HP
-          get().heal(gameConfig.hp.healPerHabitComplete);
+          // Calculate new gold
+          let newGold = state.user.character.gold + quest.goldReward;
+          
+          // Calculate new HP (heal)
+          const healAmount = gameConfig.hp.healPerHabitComplete;
+          let newHp = Math.min(state.user.character.maxHp, state.user.character.hp + healAmount);
+          let newMaxHp = state.user.character.maxHp;
+          
+          // Level up bonuses
+          if (newLevel > oldLevel) {
+            console.log('[completeQuest] LEVEL UP! From', oldLevel, 'to', newLevel);
+            const goldReward = gameConfig.goldRewards.levelUp * (newLevel - oldLevel);
+            newGold += goldReward;
+            
+            // Heal to full HP on level up
+            if (gameConfig.hp.fullHealOnLevelUp) {
+              newMaxHp = gameConfig.hp.baseMaxHp + (newLevel * gameConfig.levels.statsPerLevel.maxHp);
+              newHp = newMaxHp;
+            }
+          }
+          
+          console.log('[completeQuest] New XP:', newTotalXp, '| New Gold:', newGold, '| New Level:', newLevel);
           
           // Update quest
           const completedQuest = {
@@ -305,31 +350,51 @@ export const useGameStore = create<GameState>()(
             progress: quest.target,
           };
           
-          // Add notification
-          get().addNotification({
-            type: 'quest_complete',
-            title: '✅ Quest Complete!',
-            message: `You completed "${quest.title}" and earned ${quest.xpReward} XP!`,
-          });
+          console.log('[completeQuest] Updating all state in single set()');
           
-          // Update stats
-          if (state.user) {
-            set({
-              user: {
-                ...state.user,
-                stats: {
-                  ...state.user.stats,
-                  totalQuestsCompleted: state.user.stats.totalQuestsCompleted + 1,
-                },
-              },
-            });
-          }
-          
+          // Update ALL state in a SINGLE atomic operation
           return {
             activeQuests: state.activeQuests.filter((q) => q.id !== questId),
             completedQuests: [...state.completedQuests, completedQuest],
+            notifications: [
+              {
+                id: Date.now().toString(),
+                type: 'quest_complete' as const,
+                title: '✅ Quest Complete!',
+                message: `You completed "${quest.title}" and earned ${quest.xpReward} XP!`,
+                timestamp: new Date(),
+                read: false,
+              },
+              ...(newLevel > oldLevel ? [{
+                id: (Date.now() + 1).toString(),
+                type: 'level_up' as const,
+                title: '🎉 Level Up!',
+                message: `Congratulations! You reached level ${newLevel}!`,
+                timestamp: new Date(),
+                read: false,
+              }] : []),
+              ...state.notifications,
+            ],
+            unreadCount: state.unreadCount + (newLevel > oldLevel ? 2 : 1),
+            user: {
+              ...state.user,
+              character: {
+                ...state.user.character,
+                totalXp: newTotalXp,
+                currentXp,
+                level: newLevel,
+                gold: newGold,
+                hp: newHp,
+                maxHp: newMaxHp,
+              },
+              stats: {
+                ...state.user.stats,
+                totalQuestsCompleted: state.user.stats.totalQuestsCompleted + 1,
+              },
+            },
           };
         });
+        console.log('[completeQuest] State update complete');
       },
 
       deleteQuest: (questId: string) => {

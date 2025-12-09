@@ -2,7 +2,7 @@ import { QuestCard } from '@/components/game/QuestCard';
 import { useGameStore } from '@/store/gameStore';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- Retro Dark Palette ---
@@ -28,6 +28,7 @@ export default function QuestsScreen() {
   const activeQuests = useGameStore((state) => state.activeQuests);
   const completedQuests = useGameStore((state) => state.completedQuests);
   const completeQuest = useGameStore((state) => state.completeQuest);
+  const addQuest = useGameStore((state) => state.addQuest);
   
   const [selectedTab, setSelectedTab] = useState<'active' | 'completed'>('active');
   
@@ -38,7 +39,90 @@ export default function QuestsScreen() {
   const recentCompleted = completedQuests.slice(0, 10);
   
   const handleQuestComplete = (questId: string) => {
+    console.log('[quests.tsx] handleQuestComplete called with questId:', questId);
+    console.log('[quests.tsx] Calling completeQuest from store');
     completeQuest(questId);
+    console.log('[quests.tsx] completeQuest call finished');
+  };
+  
+  const handleCreateQuest = () => {
+    const mockQuests = [
+      {
+        title: 'Hydration Master',
+        description: 'Drink 12 glasses of water today',
+        category: 'hydration' as const,
+        target: 12,
+        xpReward: 150,
+        goldReward: 75,
+        icon: 'cup-water',
+      },
+      {
+        title: 'Power Walk',
+        description: 'Walk 15,000 steps',
+        category: 'fitness' as const,
+        target: 15000,
+        xpReward: 200,
+        goldReward: 100,
+        icon: 'walk',
+      },
+      {
+        title: 'Zen Master',
+        description: 'Meditate for 20 minutes',
+        category: 'mindfulness' as const,
+        target: 20,
+        xpReward: 180,
+        goldReward: 90,
+        icon: 'meditation',
+      },
+      {
+        title: 'Iron Warrior',
+        description: 'Exercise for 45 minutes',
+        category: 'fitness' as const,
+        target: 45,
+        xpReward: 250,
+        goldReward: 120,
+        icon: 'weight-lifter',
+      },
+      {
+        title: 'Sleep Champion',
+        description: 'Get 8 hours of quality sleep',
+        category: 'sleep' as const,
+        target: 8, 
+        xpReward: 100,
+        goldReward: 50,
+        icon: 'sleep',
+      },
+    ];
+
+    const randomQuest = mockQuests[Math.floor(Math.random() * mockQuests.length)];
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(23, 59, 59, 999);
+
+    addQuest({
+      id: `custom_${Date.now()}`,
+      title: randomQuest.title,
+      description: randomQuest.description,
+      type: 'custom',
+      category: randomQuest.category,
+      difficulty: 'medium',
+      xpReward: randomQuest.xpReward,
+      goldReward: randomQuest.goldReward,
+      progress: 0,
+      target: randomQuest.target,
+      completed: false,
+      createdAt: today,
+      dueDate: tomorrow,
+      streak: 0,
+      icon: randomQuest.icon,
+    });
+
+    Alert.alert(
+      'QUEST CREATED',
+      `New quest "${randomQuest.title}" added to your mission board!`,
+      [{ text: 'OK', style: 'default' }]
+    );
   };
   
   return (
@@ -168,7 +252,11 @@ export default function QuestsScreen() {
           )}
           
           {/* --- Retro Create Button --- */}
-          <TouchableOpacity style={styles.createButton} activeOpacity={0.8}>
+          <TouchableOpacity 
+            style={styles.createButton} 
+            activeOpacity={0.8}
+            onPress={handleCreateQuest}
+          >
             <View style={styles.createBtnContent}>
               <MaterialCommunityIcons name="plus-thick" size={20} color={PALETTE.bg} style={{ marginRight: 8 }} />
               <Text style={styles.createText}>INITIATE NEW QUEST</Text>

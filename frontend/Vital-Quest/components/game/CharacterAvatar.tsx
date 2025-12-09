@@ -1,3 +1,5 @@
+import { determineCharacterClass, getClassName } from '@/services/dynamicClass';
+import { useGameStore } from '@/store/gameStore';
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
@@ -77,13 +79,17 @@ const CLASS_AVATARS = {
 interface CharacterAvatarProps {
   level: number;
   size?: number;
-  characterClass?: CharacterClass; // Optional, defaults to warrior
 }
 
-export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 120, characterClass = 'warrior' }) => {
+export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 120 }) => {
   const scale = useSharedValue(1);
   const rotation = useSharedValue(0);
   const [showProgressionModal, setShowProgressionModal] = useState(false);
+  
+  // Get user and determine character class based on activity
+  const user = useGameStore((state) => state.user);
+  const characterClass: CharacterClass = user ? determineCharacterClass(user) : 'villager';
+  const className = getClassName(characterClass);
   
   // Idle breathing animation (Hologram drift)
   React.useEffect(() => {
@@ -167,6 +173,11 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({ level, size = 
         ]}>
           LVL.{level}
         </Text>
+      </View>
+      
+      {/* Class Badge */}
+      <View style={styles.classBadge}>
+        <Text style={styles.classText}>{className}</Text>
       </View>
 
       </TouchableOpacity>
@@ -253,5 +264,23 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     fontFamily: 'monospace',
     letterSpacing: 0.5,
+  },
+  classBadge: {
+    position: 'absolute',
+    top: -8,
+    left: -4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: PALETTE.surface,
+    borderRadius: 2,
+    borderWidth: 1,
+    borderColor: PALETTE.ranks.cyan,
+  },
+  classText: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: PALETTE.ranks.cyan,
+    letterSpacing: 0.5,
+    fontFamily: 'monospace',
   },
 });
